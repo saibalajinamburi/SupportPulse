@@ -216,3 +216,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- SupportPulse Specific ---
+.env
+venv/
+data/bronze/
+data/silver/
+data/gold/
+data/chroma/
+models/*.onnx
+models/*.joblib
+reports/*.html
+__pycache__/
+*.pyc
+.DS_Store
+mlruns/
+*.egg-info/
+dist/
+build/

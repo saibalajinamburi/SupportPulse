@@ -1,0 +1,36 @@
+{
+  "sources": [
+    {
+      "name": "GitHub Issues API",
+      "url": "https://api.github.com",
+      "licence": "Public API \u2014 content licence varies per repo",
+      "allowed_use": "research, non-commercial",
+      "collection_date": null,
+      "row_count": null
+    },
+    {
+      "name": "Tobi-Bueck/customer-support-tickets",
+      "url": "https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets",
+      "licence": "CHECK DATASET CARD BEFORE USE",
+      "allowed_use": "CHECK BEFORE USE",
+      "collection_date": null,
+      "row_count": null
+    },
+    {
+      "name": "Synthetic Generator",
+      "url": "local",
+      "licence": "Self-generated",
+      "allowed_use": "commercial, research, demo",
+      "collection_date": null,
+      "row_count": null
+    },
+    {
+      "name": "OSS Documentation KB",
+      "url": "various GitHub repos",
+      "licence": "Per-repo licence \u2014 tracked individually",
+      "allowed_use": "CHECK PER REPO",
+      "collection_date": null,
+      "row_count": null
+    }
+  ]
+}
