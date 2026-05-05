@@ -6,13 +6,16 @@ class Settings(BaseSettings):
     """
     GITHUB_PAT: str
     HF_TOKEN: str
-    GROQ_API_KEY: str | None = None
     JWT_SECRET: str
     MLFLOW_TRACKING_URI: str
     REDIS_URL: str
     CHROMA_PERSIST_DIR: str
     FEAST_REPO_PATH: str
     OLLAMA_BASE_URL: str
+    
+    # Model Selection
+    OLLAMA_LLM_MODEL: str = "gemma"
+    OLLAMA_EMBED_MODEL: str = "bge-m3"
 
     # Configuration for pydantic-settings
     model_config = SettingsConfigDict(

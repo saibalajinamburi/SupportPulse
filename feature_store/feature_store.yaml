@@ -1,0 +1,9 @@
+project: supportpulse
+provider: local
+online_store:
+  type: sqlite
+  path: data/online_store/online_store.db
+offline_store:
+  type: file
+registry: data/feature_store_registry/registry.db
+entity_key_serialization_version: 2
