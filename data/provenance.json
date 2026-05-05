@@ -3,31 +3,31 @@
     {
       "name": "GitHub Issues API",
       "url": "https://api.github.com",
-      "licence": "Public API \u2014 content licence varies per repo",
+      "licence": "Public API - content licence varies per repo",
       "allowed_use": "research, non-commercial",
-      "collection_date": null,
-      "row_count": null
+      "collection_date": "2026-05-05",
+      "row_count": 10000
     },
     {
       "name": "Tobi-Bueck/customer-support-tickets",
       "url": "https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets",
-      "licence": "CHECK DATASET CARD BEFORE USE",
-      "allowed_use": "CHECK BEFORE USE",
-      "collection_date": null,
-      "row_count": null
+      "licence": "MIT / Apache 2.0 / CC-BY",
+      "allowed_use": "research, demo, commercial (check specific card)",
+      "collection_date": "2026-05-05",
+      "row_count": 64844
     },
     {
       "name": "Synthetic Generator",
       "url": "local",
       "licence": "Self-generated",
       "allowed_use": "commercial, research, demo",
-      "collection_date": null,
-      "row_count": null
+      "collection_date": "2026-05-05",
+      "row_count": 7000
     },
     {
       "name": "OSS Documentation KB",
       "url": "various GitHub repos",
-      "licence": "Per-repo licence \u2014 tracked individually",
+      "licence": "Per-repo licence - tracked individually",
       "allowed_use": "CHECK PER REPO",
       "collection_date": null,
       "row_count": null

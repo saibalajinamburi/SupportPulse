@@ -1,19 +1,69 @@
+# ═══════════════════════════════════════════════════════════════
+# SupportPulse Intelligence Platform — Requirements (2026)
+# ═══════════════════════════════════════════════════════════════
+
+# ── Core Data Engineering ──
 numpy
+pandas
+pyarrow
 scikit-learn
-torch
-torchaudio
-xgboost
+requests
+datasets
+tqdm
+
+# ── Data Validation ──
+great-expectations
+
+# ── LLM & Embeddings (Ollama client) ──
+ollama
+
+# ── Classification (SLA only) ──
 lightgbm
-onnxruntime
+
+# ── PII Detection ──
+presidio-analyzer
+presidio-anonymizer
+
+# ── Vector Database ──
+chromadb
+
+# ── MLOps ──
+mlflow
+evidently
+
+# ── API Framework ──
 fastapi
 uvicorn[standard]
-python-dotenv
 pydantic
-chromadb
-mlflow
-prefect
-evidently
-prometheus-client
+pydantic-settings
+python-dotenv
+httpx
+
+# ── Authentication ──
+python-jose[cryptography]
+
+# ── Reliability ──
+tenacity
 redis
 celery
+
+# ── Monitoring ──
+prometheus-client
+structlog
+
+# ── Orchestration ──
+prefect
+
+# ── Load Testing ──
 locust
+
+# ── Feature Store ──
+feast
+
+# ── MCP Server ──
+mcp
+
+# ── Visualization (for reports/charts) ──
+matplotlib
+seaborn
+joblib
