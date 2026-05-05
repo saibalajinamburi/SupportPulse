@@ -1,31 +1,4 @@
-"""
-Silver Pipeline — src/data/silver_pipeline.py
-==============================================
-Transforms raw Bronze data into clean, validated Silver data.
-
-The Bronze → Silver transformation is the most critical data quality step.
-Think of it as the "factory quality control" stage:
-  - Bronze = raw materials arriving at the factory dock
-  - Silver = parts that passed inspection and are on the assembly line
-
-What this module does (in order):
-  1. Load the Bronze combined JSON
-  2. Drop incomplete/malformed records (null body, body < 20 chars)
-  3. Apply PII masking to subject + body (GDPR/privacy compliance)
-  4. Normalise raw labels to canonical categories
-  5. Assign routing_team based on category (who handles what)
-  6. Assign default priority if missing
-  7. Create deterministic ticket_id hashes if missing
-  8. Deduplicate: remove identical (subject + body) pairs
-  9. Validate every row against the Ticket Pydantic schema
-  10. Write to Parquet (columnar, compressed, fast to query)
-
-Why Parquet instead of JSON for Silver?
-  - Parquet is columnar: reading only the 'category' column reads 1/6th the data.
-  - Built-in compression: ~80% smaller than equivalent JSON.
-  - Schema-enforced: column types are stored, no silent string/int confusion.
-  - PyArrow + Pandas reads it 10x faster than JSON for ML workloads.
-"""
+"""Silver Pipeline."""
 
 import json
 import hashlib
@@ -78,16 +51,7 @@ def load_bronze(bronze_path: Path) -> pd.DataFrame:
 
 
 def clean_to_silver(df: pd.DataFrame, label_map: Optional[dict] = None) -> pd.DataFrame:
-    """
-    Apply the full Bronze → Silver transformation pipeline.
-
-    Args:
-        df:        The raw Bronze DataFrame.
-        label_map: Pre-loaded label mapping dict (loaded once for efficiency).
-
-    Returns:
-        A cleaned Silver DataFrame ready for Parquet write.
-    """
+    """Apply the full Bronze → Silver transformation pipeline."""
     if label_map is None:
         label_map = load_label_map()
 
@@ -201,20 +165,7 @@ def clean_to_silver(df: pd.DataFrame, label_map: Optional[dict] = None) -> pd.Da
 
 
 def write_silver(df: pd.DataFrame, silver_dir: Path = Path("data/silver")) -> Path:
-    """
-    Write the Silver DataFrame to Parquet.
-
-    Creates:
-      - data/silver/all_silver.parquet (combined, all sources)
-      - data/silver/<source>_tickets.parquet (per-source partitions)
-
-    Args:
-        df:         The cleaned Silver DataFrame.
-        silver_dir: Output directory (created if not exists).
-
-    Returns:
-        Path to the combined silver parquet file.
-    """
+    """Write the Silver DataFrame to Parquet."""
     silver_dir.mkdir(parents=True, exist_ok=True)
 
     # Write combined file

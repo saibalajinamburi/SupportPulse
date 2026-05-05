@@ -1,7 +1,4 @@
-"""
-Unit Tests — PII Masker
-tests/unit/test_pii_masker.py
-"""
+"""Unit Tests — PII Masker"""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))

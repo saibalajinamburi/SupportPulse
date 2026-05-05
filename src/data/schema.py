@@ -3,9 +3,7 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 class Ticket(BaseModel):
-    """
-    Unified schema for support tickets across all data sources.
-    """
+    """Unified schema for support tickets across all data sources."""
     ticket_id: str
     source: Literal["github", "zendesk", "synthetic", "hf_customer_support", "kaggle_github_issues"]
     created_at: datetime
@@ -38,9 +36,7 @@ class Ticket(BaseModel):
         from_attributes = True
 
 class KBArticle(BaseModel):
-    """
-    Schema for Knowledge Base (KB) articles used in RAG retrieval.
-    """
+    """Schema for Knowledge Base (KB) articles used in RAG retrieval."""
     article_id: str
     text: str
     source_url: str
@@ -52,9 +48,7 @@ class KBArticle(BaseModel):
         from_attributes = True
 
 class AgentTriageResult(BaseModel):
-    """
-    Schema for the final output of the agentic triage process.
-    """
+    """Schema for the final output of the agentic triage process."""
     ticket_id: str
     category: str
     priority: str

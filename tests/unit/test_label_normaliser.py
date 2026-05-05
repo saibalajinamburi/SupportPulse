@@ -1,7 +1,4 @@
-"""
-Unit Tests — Label Normaliser
-tests/unit/test_label_normaliser.py
-"""
+"""Unit Tests — Label Normaliser"""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))

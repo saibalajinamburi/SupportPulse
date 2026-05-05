@@ -1,6 +1,4 @@
-"""
-PII Masking Module — src/data/pii_masker.py
-"""
+"""PII Masking Module — src/data/pii_masker.py"""
 
 import re
 from typing import Tuple, List
@@ -54,25 +52,7 @@ _PATTERNS = [
 
 
 def mask_pii(text: str) -> Tuple[str, List[str]]:
-    """
-    Scan `text` for PII patterns, replace each match with a redaction token,
-    and return the cleaned text plus a list of PII type names found.
-
-    Args:
-        text: Raw support ticket subject or body text.
-
-    Returns:
-        A tuple of:
-          - masked_text: The text with all PII replaced by redaction tokens.
-          - pii_types_found: List of PII category names detected (e.g. ["email", "phone"]).
-
-    Example:
-        >>> masked, flags = mask_pii("Contact john@example.com or call +1-555-123-4567")
-        >>> masked
-        'Contact [EMAIL_REDACTED] or call [PHONE_REDACTED]'
-        >>> flags
-        ['email', 'phone']
-    """
+    """Mask PII from text."""
     if not isinstance(text, str) or not text.strip():
         return text, []
 

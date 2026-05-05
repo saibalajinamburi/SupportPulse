@@ -1,6 +1,4 @@
-"""
-Structured Feature Engineering — src/features/structured_features.py
-"""
+"""Structured Feature Engineering — src/features/structured_features.py"""
 
 import re
 import pandas as pd
@@ -18,17 +16,7 @@ _CODE_BLOCK_PATTERN = re.compile(r"```[\s\S]*?```")
 
 
 def build_structured_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Compute all structured features from a Silver DataFrame.
-
-    Args:
-        df: Silver DataFrame with columns: body, subject, created_at,
-            reopen_count, customer_tier, source, comments.
-
-    Returns:
-        A new DataFrame with only the feature columns (no text columns).
-        This is the 'structured features' portion of the Gold layer.
-    """
+    """Compute all structured features from a Silver DataFrame."""
     print(f"  [Features] Computing structured features for {len(df):,} rows...")
 
     now = pd.Timestamp.now(tz="UTC")

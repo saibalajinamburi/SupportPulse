@@ -1,23 +1,4 @@
-"""
-Time-Based Train/Val/Test Splitter — src/data/splitter.py
-==========================================================
-Splits the Silver dataset into training, validation, and test sets
-using a chronological (time-based) split instead of random sampling.
-
-Why time-based split instead of random split?
-  - Support tickets have temporal patterns: new bug categories emerge,
-    language trends shift, product features change over time.
-  - With a RANDOM split, your test set contains tickets from the same
-    time period as training. The model "sees the future" during training.
-  - With a TIME-BASED split:
-      * Train = oldest 70% of data (model learns from history)
-      * Val   = next 15% (tune hyperparameters on near-future)
-      * Test  = newest 15% (evaluate on true unseen future)
-  - This is how Netflix, Google, and Uber evaluate recommendation/ranking
-    models — never shuffle time-series data randomly.
-
-Split ratio: 70 / 15 / 15
-"""
+"""Time-Based Train/Val/Test Splitter."""
 
 import pandas as pd
 from pathlib import Path
@@ -30,18 +11,7 @@ def time_based_split(
     train_ratio: float = 0.70,
     val_ratio: float = 0.15,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Split a DataFrame chronologically into train, val, and test sets.
-
-    Args:
-        df:          The Silver DataFrame (must have a datetime column).
-        date_col:    Name of the datetime column to sort by.
-        train_ratio: Fraction of data for training (default 0.70).
-        val_ratio:   Fraction for validation (default 0.15). Test gets remainder.
-
-    Returns:
-        A tuple of (train_df, val_df, test_df).
-    """
+    """Split a DataFrame chronologically into train, val, and test sets."""
     # Sort by date ascending (oldest first)
     df_sorted = df.sort_values(date_col, ascending=True).reset_index(drop=True)
 
@@ -70,15 +40,7 @@ def save_splits(
     test_df: pd.DataFrame,
     gold_dir: Path = Path("data/gold"),
 ) -> None:
-    """
-    Save the three split DataFrames to Parquet files in the Gold directory.
-
-    Args:
-        train_df:  Training set DataFrame.
-        val_df:    Validation set DataFrame.
-        test_df:   Test set DataFrame.
-        gold_dir:  Output directory (created if not exists).
-    """
+    """Save the three split DataFrames to Parquet files in the Gold directory."""
     gold_dir.mkdir(parents=True, exist_ok=True)
 
     for name, split_df in [("train", train_df), ("val", val_df), ("test", test_df)]:

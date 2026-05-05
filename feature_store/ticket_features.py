@@ -1,6 +1,4 @@
-"""
-Feast Feature Definitions — feature_store/ticket_features.py
-"""
+"""Feast Feature Definitions — feature_store/ticket_features.py"""
 
 from datetime import timedelta
 from pathlib import Path

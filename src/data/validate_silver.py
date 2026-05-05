@@ -1,24 +1,4 @@
-"""
-Silver Data Validation — src/data/validate_silver.py
-=====================================================
-Great Expectations validation suite for the Silver data layer.
-
-Why validate Silver separately from Bronze?
-  - Bronze validation proves: "We received the data we expected."
-  - Silver validation proves: "The cleaning pipeline did its job correctly."
-  - They guard different failure modes:
-      * Bronze fails → source is broken (API changed, dataset moved)
-      * Silver fails → our cleaning code has a bug
-
-Key checks we enforce:
-  1. Row count still large after cleaning (we didn't accidentally drop everything)
-  2. No null ticket_ids, subjects, bodies, categories, priorities
-  3. Category values are ONLY our 10 canonical categories (label normaliser works)
-  4. Priority values are ONLY the 4 valid options
-  5. Routing teams are ONLY the 5 valid teams
-  6. Body length still >= 20 chars (short bodies weren't re-introduced)
-  7. No raw email addresses in body (PII masking worked)
-"""
+"""Silver Data Validation — src/data/validate_silver.py"""
 
 import pandas as pd
 import great_expectations as gx

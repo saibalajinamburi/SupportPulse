@@ -1,6 +1,4 @@
-"""
-BGE-M3 Embedding Module — src/features/embedding.py
-"""
+"""BGE-M3 Embedding Module — src/features/embedding.py"""
 
 import numpy as np
 import requests
@@ -19,10 +17,7 @@ MAX_WORKERS = 8  # Concurrent requests to keep GPU saturated
 
 
 def _embed_single(text: str) -> List[float]:
-    """
-    Call the Ollama embedding API for a single text string.
-    Returns a list of floats (the embedding vector).
-    """
+    """Call the Ollama embedding API for a single text string."""
     payload = {"model": EMBED_MODEL, "prompt": text}
     try:
         response = requests.post(OLLAMA_URL, json=payload, timeout=60)
@@ -37,9 +32,7 @@ def _embed_single(text: str) -> List[float]:
 
 
 def embed_texts(texts: List[str], batch_size: int = BATCH_SIZE) -> np.ndarray:
-    """
-    Encode a list of text strings into a 2D embedding matrix using concurrency.
-    """
+    """Encode a list of text strings into a 2D embedding matrix using concurrency."""
     if not texts:
         return np.array([])
 

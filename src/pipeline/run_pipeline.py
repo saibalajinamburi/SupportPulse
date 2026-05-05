@@ -1,6 +1,4 @@
-"""
-SupportPulse Data Pipeline — src/pipeline/run_pipeline.py
-"""
+"""SupportPulse Data Pipeline — src/pipeline/run_pipeline.py"""
 
 import sys
 import subprocess
@@ -22,10 +20,7 @@ from src.features.gold_pipeline import build_gold
 
 @task(name="ingest-github", retries=2, retry_delay_seconds=30)
 def task_ingest_github():
-    """
-    Collect GitHub issues from the 20 curated repositories.
-    Retries twice if the API rate-limits us (waits 30s between tries).
-    """
+    """Collect GitHub issues from the 20 curated repositories."""
     logger = get_run_logger()
     logger.info("Stage 1a: Ingesting GitHub issues...")
     from src.data.github_collector import main as github_main
@@ -245,14 +240,7 @@ def task_feast():
     task_runner=ThreadPoolTaskRunner(max_workers=1),
 )
 def data_pipeline(skip_ingest: bool = False):
-    """
-    The main Prefect flow for the SupportPulse data pipeline.
-
-    Args:
-        skip_ingest: If True, skip Stage 1 (GitHub, HF, Synthetic ingestion).
-                     Use this when Bronze data already exists and you only
-                     want to re-run cleaning and feature engineering.
-    """
+    """The main Prefect flow for the SupportPulse data pipeline."""
     logger = get_run_logger()
     start = time.time()
 

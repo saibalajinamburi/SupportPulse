@@ -1,6 +1,4 @@
-"""
-Gold Feature Pipeline — src/features/gold_pipeline.py
-"""
+"""Gold Feature Pipeline — src/features/gold_pipeline.py"""
 
 import numpy as np
 import pandas as pd
@@ -20,13 +18,7 @@ SILVER_PATH = Path("data/silver/all_silver.parquet")
 
 
 def build_gold(silver_path: Path = SILVER_PATH, gold_dir: Path = GOLD_DIR) -> None:
-    """
-    Full Silver → Gold transformation pipeline.
-
-    Args:
-        silver_path: Path to the combined Silver Parquet file.
-        gold_dir:    Output directory for Gold artifacts.
-    """
+    """Full Silver → Gold transformation pipeline."""
     gold_dir.mkdir(parents=True, exist_ok=True)
     start = time.time()
 
