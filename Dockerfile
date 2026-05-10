@@ -18,6 +18,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir "setuptools<70" "pip<24.1" wheel
 
 # Install project dependencies
+# 1. Install Feast separately to handle its strict setuptools dependency
+RUN pip install --no-cache-dir "setuptools<70" wheel
+RUN pip install --no-cache-dir --no-build-isolation feast
+
+# 2. Install the rest of the requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application

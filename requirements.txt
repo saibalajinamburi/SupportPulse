@@ -59,7 +59,6 @@ prefect
 locust
 
 # ── Feature Store ──
-feast
 
 # ── MCP Server ──
 mcp
