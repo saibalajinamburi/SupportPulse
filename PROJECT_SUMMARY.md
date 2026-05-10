@@ -1375,4 +1375,138 @@ A: FastAPI automatically generates an interactive web interface at `/docs` (powe
 
 ---
 
-## Next: Phase 8 — Dashboard & Observability
+## Phase 8: Dashboard & Observability
+
+### What is Observability in an ML System?
+Observability is the ability to understand what your system is doing in production **from the outside** — by reading its outputs (logs, metrics, traces) — without having to modify the code or restart anything. It answers three questions:
+1. **Is it working?** (Health — is the API up? Are models loaded?)
+2. **How is it performing?** (Metrics — what's the latency, escalation rate, category distribution?)
+3. **What exactly happened?** (Logs — what did ticket T001 get classified as, at what time, with what SLA risk?)
+
+Without observability, you're blind in production. You find out your model broke when a customer complains, not when it happens.
+
+### Why Streamlit and Not React/Vue/Angular?
+
+| Tool | Time to Build | Language | Live ML Integration | Deployment |
+|---|---|---|---|---|
+| **Streamlit** (chosen) | Hours | Python only | Direct (import our modules) | `pip install` + 1 command |
+| React + FastAPI | Days | JS + Python | Via API calls | npm build + hosting |
+| Grafana + Prometheus | Days | Config + PromQL | Via exporters | Docker setup |
+| Dash (Plotly) | Hours | Python | Direct | `pip install` |
+
+**Streamlit wins for an ML project because:**
+- It's Python — the same language as all our models and pipeline code. We can `import` our modules directly instead of making HTTP calls.
+- We read directly from the SQLite request log and show live stats with zero extra infrastructure.
+- The entire dashboard is 150 lines of Python. A React equivalent would be 500+ lines across 10 files.
+
+**When would you NOT use Streamlit in production?**
+- When you need user authentication per-session (Streamlit has no native auth beyond basic HTTP)
+- When you have >100 concurrent users (Streamlit re-runs the entire script on every interaction)
+- When you need a consumer-grade polished UI
+
+For an internal ML monitoring dashboard, Streamlit is the industry standard choice at early-stage AI companies (Hugging Face, many YC startups use it internally).
+
+### What We Built
+
+#### `src/monitoring/request_logger.py` — SQLite Observability Store
+Every call to `POST /triage` is persisted to `data/requests.db` with:
+- Timestamp, ticket ID, subject (truncated to 200 chars)
+- Classification output: category, priority, routing team
+- SLA prediction: risk score
+- Decision: auto_escalate flag
+- Performance: classify_ms, retrieve_ms, rag_ms, total_ms
+
+**Why SQLite and not a real database like PostgreSQL?**
+- No server to manage — it's a file (`data/requests.db`)
+- Python's `sqlite3` is in the standard library — zero extra dependencies
+- For a single-machine deployment handling thousands of requests/day, SQLite handles it fine (it can do ~50k writes/second)
+- In production you'd swap to PostgreSQL or ClickHouse for multi-server deployments, but the interface stays the same
+
+**Critical production pattern:** The logging call is wrapped in `try/except` with `pass`:
+```python
+try:
+    log_triage(...)
+except Exception:
+    pass  # Never let logging break the response
+```
+Logging must NEVER crash the main response. If the SQLite file is locked or disk is full, the user still gets their triage result. Logging is best-effort, not critical path.
+
+#### `dashboard/streamlit_app.py` — 4-Page Monitoring Dashboard
+
+**Page 1: Live Triage**
+- Submit any support ticket text directly from the browser
+- Toggle `run_rag` to switch between fast routing-only mode and full RAG generation
+- Displays all pipeline outputs: category, priority, SLA risk, routing team, escalation status
+- Shows top-3 similar tickets as a table
+- Pipeline timing breakdown as a bar chart (classify vs retrieve vs generate)
+
+**Page 2: Analytics**
+- Total tickets triaged, escalation rate, avg latency (from SQLite)
+- Category distribution bar chart — tells you if the system is seeing unusual spikes in a category
+
+**Page 3: Request Log**
+- Last 50 triage requests from SQLite in tabular form
+- For debugging: "what exactly happened with ticket T023 yesterday?"
+
+**Page 4: System Health**
+- Live call to `GET /health` — shows if API is up and what models are loaded
+- Architecture diagram showing the full pipeline
+
+### What is an `__init__.py` and Why is it Needed?
+The `src/monitoring/` directory needs an `__init__.py` file to be recognized as a Python package. Without it, `from src.monitoring.request_logger import log_triage` raises `ModuleNotFoundError`. An `__init__.py` can be empty — its presence is what matters. Python 3.3+ supports "namespace packages" without `__init__.py`, but explicit is better.
+
+### Verified Results
+
+```
+Streamlit Dashboard: ✅ Running at http://localhost:8501
+FastAPI Server:      ✅ Running at http://localhost:8000
+
+Dashboard pages verified:
+  - Live Triage: Form rendered, connects to API at port 8000
+  - Analytics:   Reads from SQLite, shows stats when data present
+  - Request Log: Shows last 50 entries from data/requests.db
+  - Health:      Calls /health, displays: 68,235 indexed tickets
+
+API Observability logging: Active — every /triage call persisted to SQLite
+```
+
+### Phase 8 — Interview Questions & Answers
+
+**Q: What is the difference between monitoring and observability?**
+A: Monitoring is about tracking known failure modes — you set up alerts for "CPU > 90%" or "API error rate > 5%". Observability is about being able to investigate UNKNOWN failures by examining logs, metrics, and traces. A system with monitoring tells you "something is wrong." A system with observability lets you answer "why is it wrong and exactly where?"
+
+**Q: What metrics would you monitor for a production ML API?**
+A: There are 3 layers:
+1. **Infrastructure metrics:** CPU, GPU utilization, RAM, disk I/O — monitored with Prometheus + node exporter
+2. **API metrics:** Request latency (p50, p95, p99), error rate, requests/second — monitored with FastAPI middleware
+3. **ML-specific metrics:** Classification confidence distribution, escalation rate over time, category distribution drift — this is what our SQLite logger captures. If the average confidence suddenly drops from 0.92 to 0.65, the model is struggling — possibly the ticket language has shifted (model drift)
+
+**Q: What is model drift and how do you detect it?**
+A: Model drift is when the real-world data the model sees in production starts looking different from the data it was trained on, causing accuracy to degrade.
+- **Data drift:** The input distribution shifts. E.g., suddenly many tickets about a new product feature you hadn't seen in training.
+- **Concept drift:** The relationship between inputs and labels shifts. E.g., what used to be a "feature request" is now called a "bug" by customers.
+Detection: Track the distribution of the model's output (category distribution, confidence scores). If the distribution shifts significantly (measured by KL divergence or Population Stability Index), trigger a re-evaluation. Tools: Evidently AI, WhyLabs.
+
+**Q: How would you add real-time alerting to this system?**
+A: Three steps:
+1. Add a Prometheus metrics endpoint to FastAPI using `prometheus-fastapi-instrumentator`
+2. Configure Prometheus to scrape it every 15 seconds
+3. Set Alertmanager rules: "if escalation_rate > 30% for 5 minutes, send Slack alert"
+This is the industry standard for ML API alerting (used at Netflix, Stripe, Airbnb).
+
+**Q: Why is it important to log the subject and not the full ticket body?**
+A: Two reasons:
+1. **PII compliance (GDPR):** Ticket bodies often contain customer email addresses, names, company data. Logging full bodies without masking would create a compliance liability.
+2. **Storage efficiency:** At 1000 tickets/day × average body of 500 words ≈ 3MB/day uncompressed. Truncating to the subject (20 words) reduces log storage by 25x.
+In production you'd run the PII masker from Phase 2 on the subject before logging.
+
+### Phase 8 Conclusion
+- Streamlit dashboard live at `http://localhost:8501` with 4 pages
+- SQLite request logger active — every `/triage` call persisted automatically
+- Analytics panel shows category distribution, escalation rate, avg latency
+- System Health page shows live API status + pipeline architecture
+- GitHub: ✅ Pushed (`dashboard/streamlit_app.py`, `src/monitoring/request_logger.py`, updated `app/main.py`)
+
+---
+
+## Next: Phase 9 — Automated RAGAS Evaluation & Drift Detection
