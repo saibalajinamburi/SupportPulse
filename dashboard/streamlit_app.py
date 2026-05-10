@@ -257,11 +257,11 @@ elif "💚" in page:
         st.code(
             "POST /triage\n"
             "  │\n"
-            "  ├─ [1] LLM Cascade Classifier (gemma2:2b → gemma4:e4b fallback)\n"
+            "  ├─ [1] LLM Cascade Classifier (gemma4:e4b primary)\n"
             "  ├─ [2] LightGBM SLA Breach Predictor\n"
             "  ├─ [3] ChromaDB Semantic Search (68,235 vectors, ~4ms)\n"
             "  ├─ [4] Deterministic Routing Rules + SLA Override\n"
-            "  └─ [5] RAG Response Generator (optional, gemma2:2b)\n"
+            "  └─ [5] RAG Response Generator (optional, gemma4:e4b)\n"
             "\n"
             "  SQLite Observability → data/requests.db\n"
             "  Dashboard            → http://localhost:8501",

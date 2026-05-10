@@ -21,7 +21,7 @@ A production-grade AI support ticket triage system that automatically classifies
 | **FastAPI** | `http://localhost:8000/docs` | Swagger UI — interactive endpoint testing |
 | **Streamlit Dashboard** | `http://localhost:8501` | 4-page monitoring & live AI triage UI |
 | **MLflow UI** | `http://localhost:5000` | Experiment tracking & model registry |
-| **DagsHub** | `Remote Tracking URL` | Remote MLflow tracking & Data versioning (Optional) |
+| **DagsHub** | `https://dagshub.com/saibalajinamburi/SupportPulse` | Remote MLflow tracking & Data versioning (Optional) |
 | **Grafana** | `http://localhost:3000` | DevOps observability & hardware metrics |
 | **Prometheus** | `http://localhost:9090` | Time-series metrics scraper |
 
@@ -206,8 +206,8 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 If you want to track experiments remotely instead of locally, set up DagsHub:
 ```bash
 # 1. Set your credentials
-export MLFLOW_TRACKING_URI="https://dagshub.com/YOUR_USERNAME/SupportPulse.mlflow"
-export MLFLOW_TRACKING_USERNAME="YOUR_USERNAME"
+export MLFLOW_TRACKING_URI="https://dagshub.com/saibalajinamburi/SupportPulse.mlflow"
+export MLFLOW_TRACKING_USERNAME="saibalajinamburi"
 export MLFLOW_TRACKING_PASSWORD="YOUR_DAGSHUB_TOKEN"
 
 # 2. Run the pipeline - metrics will log to the cloud automatically
