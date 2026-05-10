@@ -271,8 +271,8 @@ EXAMPLES = [
 ]
 
 CUSTOM_CSS = """
-    body { background: #020617 !important; }
-    .gradio-container { max-width: 1100px !important; }
+    body { background: #020617 !important; display: flex; justify-content: center; }
+    .gradio-container { max-width: 1100px !important; margin: 0 auto !important; width: 100% !important; }
     .gr-button-primary { background: #3b82f6 !important; border: none !important; }
 """
 with gr.Blocks(title="SupportPulse Intelligence Platform") as demo:
