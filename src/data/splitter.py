@@ -25,11 +25,11 @@ def time_based_split(
 
     print(f"\n  [Splitter] Total rows: {n:,}")
     print(f"  [Splitter] Train: {len(train_df):,} rows  "
-          f"({train_df[date_col].min().date()} → {train_df[date_col].max().date()})")
+          f"({train_df[date_col].min().date()} -> {train_df[date_col].max().date()})")
     print(f"  [Splitter] Val:   {len(val_df):,} rows  "
-          f"({val_df[date_col].min().date()} → {val_df[date_col].max().date()})")
+          f"({val_df[date_col].min().date()} -> {val_df[date_col].max().date()})")
     print(f"  [Splitter] Test:  {len(test_df):,} rows  "
-          f"({test_df[date_col].min().date()} → {test_df[date_col].max().date()})")
+          f"({test_df[date_col].min().date()} -> {test_df[date_col].max().date()})")
 
     return train_df, val_df, test_df
 

@@ -54,7 +54,7 @@ with st.sidebar:
         h = health_resp.json()
         st.success("✅ API: Online")
         st.caption(f"📦 {h.get('vector_index_size', 0):,} tickets indexed")
-        st.caption(f"🤖 {h.get('llm_model', 'N/A')}")
+        st.caption(f"🤖 {h.get('llm_model', 'N/A')} & {h.get('fallback_model', 'N/A')}")
     except Exception:
         st.error("❌ API: Offline")
         st.caption("Run: uvicorn app.main:app --port 8000")
@@ -67,11 +67,24 @@ if "🎯" in page:
     st.title("🎯 Live Ticket Triage")
     st.caption("Submit a support ticket and see the full AI pipeline run in real-time.")
 
+    EXAMPLES = {
+        "Custom...": {"subject": "", "body": ""},
+        "Production Outage": {"subject": "Production API returning 500 errors for all users", "body": "Our production API has been returning HTTP 500 errors for all endpoints for the past 20 minutes. All users are affected. Started after today's deployment."},
+        "SQL Injection": {"subject": "SQL injection vulnerability found in login form", "body": "Security researcher found that the login form is vulnerable to SQL injection. Attacker can bypass authentication using ' OR '1'='1 payload."},
+        "Upgrade Plan": {"subject": "How do I upgrade my subscription plan?", "body": "I want to move from the Basic plan to the Pro plan. Can you help me with the upgrade process and pricing?"},
+        "File Upload Crash": {"subject": "Application crashes when uploading files larger than 10MB", "body": "When users try to upload files bigger than 10MB the application crashes with an unhandled exception. Smaller files work fine."}
+    }
+
+    selected_scenario = st.selectbox("Quick Select Scenario (Optional)", list(EXAMPLES.keys()))
+    default_sub = EXAMPLES[selected_scenario]["subject"]
+    default_body = EXAMPLES[selected_scenario]["body"]
+
     with st.form("triage_form"):
         col1, col2 = st.columns([3, 1])
         with col1:
             subject = st.text_input(
                 "Ticket Subject",
+                value=default_sub,
                 placeholder="e.g. Production API returning 500 errors for all users"
             )
         with col2:
@@ -79,6 +92,7 @@ if "🎯" in page:
 
         body = st.text_area(
             "Ticket Description",
+            value=default_body,
             placeholder="Describe the issue in detail...",
             height=140,
         )

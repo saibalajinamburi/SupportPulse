@@ -13,6 +13,25 @@ A production-grade AI support ticket triage system that automatically classifies
 
 ---
 
+## 📸 Dashboard Gallery
+
+### Live Triage & RAG
+![Streamlit Live Triage](Images/Streamlit_Live_Triage.png)
+
+### System Analytics
+![Streamlit Analytics](Images/Streamlit_Analytics.png)
+
+### Request Log & Observability
+![Streamlit Request Log](Images/Streamlit_Request_Log.png)
+
+### System Health
+![Streamlit System Health](Images/Streamlit_System_Health.png)
+
+### HuggingFace Deployment
+![HuggingFace App](Images/HuggingFace_App.png)
+
+---
+
 ## Live Services
 
 | Service | URL | Description |
