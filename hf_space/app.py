@@ -296,6 +296,14 @@ with gr.Blocks(title="SupportPulse Intelligence Platform") as demo:
     with gr.Row():
         with gr.Column(scale=1):
             gr.HTML("<h3 style='color:#f1f5f9; margin:0 0 12px'>Submit Support Ticket</h3>")
+            
+            # Better UX for examples
+            scenario_dropdown = gr.Dropdown(
+                label="Quick Select Scenario (Optional)",
+                choices=[ex[0] for ex in EXAMPLES],
+                info="Choose a pre-made ticket or type your own below"
+            )
+            
             subject_in = gr.Textbox(
                 label="Ticket Subject",
                 placeholder="e.g. Production API returning 500 errors for all users",
@@ -307,11 +315,17 @@ with gr.Blocks(title="SupportPulse Intelligence Platform") as demo:
                 lines=5,
             )
             btn = gr.Button("Run AI Triage Pipeline", variant="primary", size="lg")
-
-            gr.Examples(
-                examples=EXAMPLES,
-                inputs=[subject_in, body_in],
-                label="Example Tickets (click to load)",
+            
+            def load_example(choice):
+                for ex in EXAMPLES:
+                    if ex[0] == choice:
+                        return ex[0], ex[1]
+                return "", ""
+                
+            scenario_dropdown.change(
+                fn=load_example,
+                inputs=[scenario_dropdown],
+                outputs=[subject_in, body_in]
             )
 
     gr.HTML("<hr style='border-color: #1e293b; margin: 20px 0;'>")
