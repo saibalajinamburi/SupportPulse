@@ -9,6 +9,7 @@
   <a href="http://localhost:3000"><img src="https://img.shields.io/badge/Grafana-Local_Observability-F46800?style=for-the-badge&logo=grafana" alt="Grafana"></a>
   <a href="http://localhost:9090"><img src="https://img.shields.io/badge/Prometheus-Local_Metrics-E6522C?style=for-the-badge&logo=prometheus" alt="Prometheus"></a>
   <a href="https://github.com/saibalajinamburi/SupportPulse/blob/main/docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker" alt="Docker"></a>
+  <a href="https://github.com/saibalajinamburi/SupportPulse/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI/CD-Passing-44cc11?style=for-the-badge&logo=github-actions" alt="CI/CD"></a>
 </p>
 
 > **End-to-End Production MLOps | LLM Cascade · RAG · ChromaDB · LightGBM · FastAPI · Streamlit · Prometheus · Grafana**
@@ -275,6 +276,9 @@ Phase 6:  Triage Agent (deterministic routing + SLA override)
 Phase 7:  FastAPI Gateway (pre-warming, Pydantic validation, CORS)
 Phase 8:  Observability (Streamlit dashboard + SQLite request logger)
 Phase 9:  Evaluation (RAGAS LLM Judge + PSI drift detection)
+Phase 10: Project Polish (Architecture diagrams, gallery, README)
+Phase 11: CI/CD (GitHub Actions, Pytest suite, Ruff linting)
+Phase 12: Production Observability (Prometheus, Grafana provisioner, GHCR CD)
 ```
 
 ---
