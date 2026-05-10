@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     FEAST_REPO_PATH: str
     OLLAMA_BASE_URL: str
     
-    # Model Selection (Cascade: fast primary → smart fallback)
-    OLLAMA_LLM_MODEL: str = "gemma2:2b"
-    OLLAMA_FALLBACK_MODEL: str = "gemma4:e4b"
+    # Model Selection (Cascade: smart primary → fast fallback)
+    OLLAMA_LLM_MODEL: str = "gemma4:e4b"
+    OLLAMA_FALLBACK_MODEL: str = "gemma2:2b"
     OLLAMA_EMBED_MODEL: str = "bge-m3:latest"
 
     # Configuration for pydantic-settings

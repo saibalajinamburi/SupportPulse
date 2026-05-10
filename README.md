@@ -41,9 +41,9 @@ A production-grade AI support ticket triage system that automatically classifies
 │  LLM Cascade    │        │  LightGBM SLA      │       │  ChromaDB Vector   │
 │  Classifier     │        │  Breach Predictor  │       │  Search (68k docs) │
 │                 │        │                    │       │                    │
-│  gemma2:2b  ──► │        │  18 structured     │       │  BGE-M3 embeddings │
+│  gemma4:e4b  ──► │        │  18 structured     │       │  BGE-M3 embeddings │
 │  (primary)      │        │  features → risk   │       │  cosine similarity │
-│  gemma4:e4b ──► │        │  score 0.0-1.0     │       │  HNSW index ~2ms   │
+│  gemma2:2b  ──► │        │  score 0.0-1.0     │       │  HNSW index ~2ms   │
 │  (fallback)     │        │                    │       │                    │
 └────────┬────────┘        └────────┬───────────┘       └────────┬───────────┘
          │                          │                             │
@@ -61,7 +61,7 @@ A production-grade AI support ticket triage system that automatically classifies
                           │  RAG Generator      │
                           │  (optional)         │
                           │                    │
-                          │  gemma2:2b +        │
+                          │  gemma4:e4b +       │
                           │  grounding prompt   │
                           └─────────┬──────────┘
                                     │
@@ -80,7 +80,7 @@ A production-grade AI support ticket triage system that automatically classifies
 ### 1. LLM Cascade — Why Two Models (`gemma2:2b` & `gemma4:e4b`)?
 Using `gemma4:e4b` (a powerful, highly capable fallback model) for every ticket provides maximum accuracy but is slower and resource-intensive. Using `gemma2:2b` (a lightweight, ultra-fast primary model) is highly efficient but can sometimes struggle with complex, ambiguous edge cases.
 
-The **Cascade Pattern** solves this: every ticket is routed through the fast `gemma2:2b` first. If its confidence score falls below 0.75, the system automatically escalates the ticket to the highly credible `gemma4:e4b` fallback model. Result: **~5 second average latency while retaining enterprise-grade large-model accuracy.**
+The **Cascade Pattern** ensures maximum reliability: every ticket is routed through the powerful `gemma4:e4b` primary model first. If there are resource constraints or the system needs a high-speed verification, it uses the `gemma2:2b` fallback model. Result: **Enterprise-grade large-model accuracy with a smart multi-model failover.**
 
 ### 2. Deterministic Routing Agent — Not LangChain
 An autonomous LangChain agent might route a SQL injection ticket to the billing team if the ticket mentions payment data. With hardcoded routing rules, the decision is always auditable: `security + critical → security team, always`. For enterprise production, predictability beats autonomy.
