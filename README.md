@@ -15,7 +15,7 @@
 
 A production-grade AI support ticket triage system that automatically classifies, prioritizes, routes, and generates grounded resolutions for support tickets — built with a full MLOps lifecycle from raw data ingestion through drift monitoring.
 
-![Streamlit Live Triage Dashboard](images/Streamlit_Live_Triage.png)
+![Streamlit Live Triage Dashboard](Images/Streamlit_Live_Triage.png)
 
 ---
 
@@ -24,32 +24,32 @@ A production-grade AI support ticket triage system that automatically classifies
 ### 🧠 Live Triage & Results
 *Watch the LLM Cascade and RAG pipeline in action.*
 <p align="center">
-  <img src="images/Streamlit_Live_Triage.png" width="48%">
-  <img src="images/Streamlit_Result.png" width="48%">
+  <img src="Images/Streamlit_Live_Triage.png" width="48%">
+  <img src="Images/Streamlit_Result.png" width="48%">
 </p>
 
 ### 🌍 Hugging Face Deployment
 *The public-facing interactive Gradio app.*
 <p align="center">
-  <img src="images/HuggingFace_App.png" width="48%">
-  <img src="images/Hugging_Face_Result.png" width="48%">
+  <img src="Images/HuggingFace_App.png" width="48%">
+  <img src="Images/Hugging_Face_Result.png" width="48%">
 </p>
 
 ### 📊 System Analytics & Logging
 *Deep insights into ticket behaviors and API logs.*
 <p align="center">
-  <img src="images/Streamlit_Analytics.png" width="48%">
-  <img src="images/Streamlit_Request_Log.png" width="48%">
+  <img src="Images/Streamlit_Analytics.png" width="48%">
+  <img src="Images/Streamlit_Request_Log.png" width="48%">
 </p>
 
 ### 🛠 Observability & Health
 *Hardware metrics, API latencies, and remote MLflow tracking.*
 <p align="center">
-  <img src="images/Grafana_Monitoring.png" width="48%">
-  <img src="images/DagsHub_Monitoring.png" width="48%">
+  <img src="Images/Grafana_Monitoring.png" width="48%">
+  <img src="Images/DagsHub_Monitoring.png" width="48%">
 </p>
 <p align="center">
-  <img src="images/Streamlit_System_Health.png" width="48%">
+  <img src="Images/Streamlit_System_Health.png" width="48%">
 </p>
 
 ---
