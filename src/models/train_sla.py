@@ -1,6 +1,7 @@
 """LightGBM SLA Breach Model — trainer with progress tracking and local MLflow."""
 
 import time
+import dagshub
 import datetime
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ from sklearn.metrics import (
     confusion_matrix, classification_report
 )
 import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
@@ -85,8 +87,8 @@ def train() -> Path:
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     _start_time = time.time()
 
-    # Use local file-based MLflow — no server required
-    mlflow.set_tracking_uri(f"sqlite:///{Path('mlflow.db').resolve()}")
+
+    dagshub.init(repo_owner='saibalajinamburi', repo_name='SupportPulse', mlflow=True)
     mlflow.set_experiment("sla_breach_prediction")
 
     print("=" * 60)

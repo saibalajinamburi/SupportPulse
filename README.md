@@ -1,100 +1,116 @@
-# SupportPulse Intelligence Platform
+# 🚀 SupportPulse Intelligence Platform
 
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/saibalajiomg/SupportPulse)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-blue?logo=docker)](https://github.com/saibalajinamburi/SupportPulse/blob/main/docker-compose.yml)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)](http://localhost:8000/docs)
-[![Grafana](https://img.shields.io/badge/Grafana-Observability-orange?logo=grafana)](http://localhost:3000)
+<p align="center">
+  <a href="https://huggingface.co/spaces/saibalajiomg/SupportPulse"><img src="https://img.shields.io/badge/🤗_Hugging_Face-Live_Demo-blue?style=for-the-badge&logo=huggingface" alt="Hugging Face"></a>
+  <a href="https://dagshub.com/saibalajinamburi/SupportPulse"><img src="https://img.shields.io/badge/DagsHub-Live_MLflow_Tracking-000000?style=for-the-badge&logo=github" alt="DagsHub"></a>
+  <br>
+  <a href="http://localhost:8501"><img src="https://img.shields.io/badge/Streamlit-Local_Dashboard-FF4B4B?style=for-the-badge&logo=streamlit" alt="Streamlit"></a>
+  <a href="http://localhost:8000/docs"><img src="https://img.shields.io/badge/FastAPI-Local_Backend-009688?style=for-the-badge&logo=fastapi" alt="FastAPI"></a>
+  <a href="http://localhost:3000"><img src="https://img.shields.io/badge/Grafana-Local_Observability-F46800?style=for-the-badge&logo=grafana" alt="Grafana"></a>
+  <a href="http://localhost:9090"><img src="https://img.shields.io/badge/Prometheus-Local_Metrics-E6522C?style=for-the-badge&logo=prometheus" alt="Prometheus"></a>
+  <a href="https://github.com/saibalajinamburi/SupportPulse/blob/main/docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker" alt="Docker"></a>
+</p>
 
 > **End-to-End Production MLOps | LLM Cascade · RAG · ChromaDB · LightGBM · FastAPI · Streamlit · Prometheus · Grafana**
 
 A production-grade AI support ticket triage system that automatically classifies, prioritizes, routes, and generates grounded resolutions for support tickets — built with a full MLOps lifecycle from raw data ingestion through drift monitoring.
 
-![Streamlit Live Triage Dashboard](Images/Streamlit_Live_Triage.png)
+![Streamlit Live Triage Dashboard](images/Streamlit_Live_Triage.png)
 
 ---
 
-## 📸 Dashboard Gallery
+## 📸 Platform Gallery
 
-### Live Triage & RAG
-![Streamlit Live Triage](Images/Streamlit_Live_Triage.png)
+### 🧠 Live Triage & Results
+*Watch the LLM Cascade and RAG pipeline in action.*
+<p align="center">
+  <img src="images/Streamlit_Live_Triage.png" width="48%">
+  <img src="images/Streamlit_Result.png" width="48%">
+</p>
 
-### System Analytics
-![Streamlit Analytics](Images/Streamlit_Analytics.png)
+### 🌍 Hugging Face Deployment
+*The public-facing interactive Gradio app.*
+<p align="center">
+  <img src="images/HuggingFace_App.png" width="48%">
+  <img src="images/Hugging_Face_Result.png" width="48%">
+</p>
 
-### Request Log & Observability
-![Streamlit Request Log](Images/Streamlit_Request_Log.png)
+### 📊 System Analytics & Logging
+*Deep insights into ticket behaviors and API logs.*
+<p align="center">
+  <img src="images/Streamlit_Analytics.png" width="48%">
+  <img src="images/Streamlit_Request_Log.png" width="48%">
+</p>
 
-### System Health
-![Streamlit System Health](Images/Streamlit_System_Health.png)
-
-### HuggingFace Deployment
-![HuggingFace App](Images/HuggingFace_App.png)
+### 🛠 Observability & Health
+*Hardware metrics, API latencies, and remote MLflow tracking.*
+<p align="center">
+  <img src="images/Grafana_Monitoring.png" width="48%">
+  <img src="images/DagsHub_Monitoring.png" width="48%">
+</p>
+<p align="center">
+  <img src="images/Streamlit_System_Health.png" width="48%">
+</p>
 
 ---
 
-## Live Services
+## 🌐 Live Services & Links
 
+### ☁️ Live Cloud Deployments
 | Service | URL | Description |
 |---|---|---|
-| **HuggingFace Space** | [Live Demo](https://huggingface.co/spaces/saibalajiomg/SupportPulse) | Public interactive Gradio UI with pre-computed results |
+| **Hugging Face Space** | [🤗 Live Demo App](https://huggingface.co/spaces/saibalajiomg/SupportPulse) | Public interactive Gradio UI with pre-computed results |
+| **DagsHub** | [🐙 Live MLflow Tracking](https://dagshub.com/saibalajinamburi/SupportPulse) | Remote MLflow tracking, metrics, and Data versioning |
+
+### 🏠 Local Development Services (Docker)
+| Service | URL | Description |
+|---|---|---|
 | **FastAPI** | `http://localhost:8000/docs` | Swagger UI — interactive endpoint testing |
 | **Streamlit Dashboard** | `http://localhost:8501` | 4-page monitoring & live AI triage UI |
-| **MLflow UI** | `http://localhost:5000` | Experiment tracking & model registry |
-| **DagsHub** | `https://dagshub.com/saibalajinamburi/SupportPulse` | Remote MLflow tracking & Data versioning (Optional) |
 | **Grafana** | `http://localhost:3000` | DevOps observability & hardware metrics |
 | **Prometheus** | `http://localhost:9090` | Time-series metrics scraper |
+| **MLflow UI** | `http://localhost:5000` | Local Experiment tracking (Alternative to DagsHub) |
 
 ---
 
-## Architecture
+## 🏗 System Architecture
 
-```
-                    ┌─────────────────────────────────────────┐
-                    │         POST /triage (FastAPI)           │
-                    └──────────────────┬──────────────────────┘
-                                       │
-          ┌────────────────────────────┼────────────────────────────┐
-          │                            │                            │
-          ▼                            ▼                            ▼
-┌─────────────────┐        ┌────────────────────┐       ┌────────────────────┐
-│  LLM Cascade    │        │  LightGBM SLA      │       │  ChromaDB Vector   │
-│  Classifier     │        │  Breach Predictor  │       │  Search (68k docs) │
-│                 │        │                    │       │                    │
-│  gemma4:e4b  ──► │        │  18 structured     │       │  BGE-M3 embeddings │
-│  (primary)      │        │  features → risk   │       │  cosine similarity │
-│  gemma2:2b  ──► │        │  score 0.0-1.0     │       │  HNSW index ~2ms   │
-│  (fallback)     │        │                    │       │                    │
-└────────┬────────┘        └────────┬───────────┘       └────────┬───────────┘
-         │                          │                             │
-         └──────────────────────────┼─────────────────────────────┘
-                                    │
-                          ┌─────────▼──────────┐
-                          │  Deterministic      │
-                          │  Triage Agent       │
-                          │                    │
-                          │  Routing Rules +    │
-                          │  SLA Override       │
-                          └─────────┬──────────┘
-                                    │
-                          ┌─────────▼──────────┐
-                          │  RAG Generator      │
-                          │  (optional)         │
-                          │                    │
-                          │  gemma4:e4b +       │
-                          │  grounding prompt   │
-                          └─────────┬──────────┘
-                                    │
-                          ┌─────────▼──────────┐
-                          │  SQLite Observ.     │
-                          │  Logger             │
-                          │  + Drift Detector   │
-                          │  + RAGAS Evaluator  │
-                          └────────────────────┘
+```mermaid
+graph TD
+    User([fa:fa-user User Request]) --> API[FastAPI Gateway \n POST /triage]
+    
+    subgraph "🤖 AI Processing Engine"
+        API --> Cascade[LLM Cascade Classifier]
+        Cascade -- "Primary" --> G4[gemma4:e4b]
+        Cascade -- "Fallback" --> G2[gemma2:2b]
+        
+        API --> SLA[LightGBM SLA Breach Predictor \n 18 structured features]
+        
+        API --> VectorDB[(ChromaDB Vector Search \n BGE-M3 Embeddings)]
+    end
+    
+    subgraph "⚙️ Orchestration"
+        Cascade --> Agent[Deterministic Triage Agent \n Routing Rules & SLA Override]
+        SLA --> Agent
+        VectorDB --> Agent
+        Agent --> RAG[RAG Generator \n Grounding Prompt + gemma4:e4b]
+    end
+    
+    subgraph "👁️ Observability & Tracking"
+        RAG --> SQLite[(SQLite \n Request Log)]
+        SQLite --> Drift[PSI Drift Detector]
+        SQLite --> Ragas[RAGAS Evaluator]
+        API -.-> Prom[Prometheus \n /metrics Scraper]
+        Prom -.-> Grafana[Grafana Dashboard]
+        Cascade -.-> MLflow[DagsHub MLflow \n Model Tracking]
+    end
+
+    RAG --> Response([Final Triage Response])
 ```
 
 ---
 
-## Key Design Decisions
+## 🧠 Key Design Decisions
 
 ### 1. LLM Cascade — Why Two Models (`gemma2:2b` & `gemma4:e4b`)?
 Using `gemma4:e4b` (a powerful, highly capable fallback model) for every ticket provides maximum accuracy but is slower and resource-intensive. Using `gemma2:2b` (a lightweight, ultra-fast primary model) is highly efficient but can sometimes struggle with complex, ambiguous edge cases.
@@ -112,47 +128,36 @@ Supports 100+ languages and hybrid search (dense semantic + sparse keyword). Cri
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
-```
+```bash
 SupportPulse/
-├── app/                        # FastAPI gateway
+├── app/                        # ⚡ FastAPI gateway
 │   ├── main.py                 # Lifespan pre-warming, 3 endpoints
 │   ├── schemas.py              # Pydantic request/response models
 │   └── config.py               # Settings management
-├── dashboard/
-│   └── streamlit_app.py        # 4-page Streamlit monitoring dashboard
-├── src/
-│   ├── agent/
-│   │   └── triage_agent.py     # Deterministic orchestration agent
-│   ├── features/
-│   │   ├── embedding.py        # GPU-accelerated BGE-M3 batch embedding
-│   │   └── structured_features.py  # 18-feature behavioral extraction
-│   ├── models/
-│   │   ├── classifier.py       # LLM Cascade classifier
-│   │   └── sla_model.py        # LightGBM SLA breach predictor
-│   ├── monitoring/
-│   │   ├── request_logger.py   # SQLite observability logger
-│   │   ├── rag_evaluator.py    # LLM-as-a-Judge RAGAS evaluation
-│   │   └── drift_detector.py   # PSI + KL divergence drift detection
-│   ├── rag/
-│   │   ├── pipeline.py         # End-to-end RAG orchestration
-│   │   └── prompt_builder.py   # Grounding prompt template
-│   └── vector/
-│       ├── indexer.py          # ChromaDB batch indexer
-│       └── retriever.py        # Semantic similarity retrieval
-├── scripts/
+├── dashboard/                  # 📊 Streamlit UI
+│   └── streamlit_app.py        # 4-page monitoring dashboard
+├── src/                        # 🧠 Core ML Code
+│   ├── agent/                  # Deterministic orchestration
+│   ├── features/               # BGE-M3 embedding & structure extraction
+│   ├── models/                 # LLM Cascade & LightGBM
+│   ├── monitoring/             # Drift, Evaluation, Logging
+│   ├── rag/                    # RAG pipeline & prompts
+│   └── vector/                 # ChromaDB Vector Search
+├── scripts/                    # 🧪 Testing & Utilities
 │   ├── test_api.py             # Full API test suite
-│   └── evaluate_agent.py       # 20-ticket agent accuracy evaluation
-├── feature_store/              # Feast feature store configuration
-├── hf_space/                   # HuggingFace Spaces Gradio App
-├── docker-compose.yml          # Container orchestration spec
-└── requirements.txt            # All dependencies
+│   ├── evaluate_agent.py       # 20-ticket agent accuracy evaluation
+│   ├── setup_grafana.py        # Automated Grafana dashboard provisioner
+│   └── generate_traffic.py     # Live API traffic load tester
+├── hf_space/                   # 🤗 HuggingFace Spaces Gradio App
+├── docker-compose.yml          # 🐳 Container orchestration spec
+└── requirements.txt            # 📦 Dependencies
 ```
 
 ---
 
-## Dataset
+## 📊 Dataset
 
 - **Source**: GitHub Issues API + HuggingFace datasets + Synthetic generation
 - **Raw (Bronze)**: 81,844 tickets
@@ -165,7 +170,7 @@ SupportPulse/
 
 ---
 
-## Model Performance
+## 🏆 Model Performance
 
 | Model | Metric | Value |
 |---|---|---|
@@ -181,7 +186,7 @@ SupportPulse/
 
 ---
 
-## Running Locally
+## ⚙️ Running Locally
 
 ### Prerequisites
 - Python 3.12+
@@ -209,18 +214,6 @@ The easiest way to run the entire stack (FastAPI, Streamlit, MLflow, Prometheus,
 docker-compose up -d
 ```
 
-### Start Services (Manual Local)
-```bash
-# Terminal 1 — API Server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# Terminal 2 — Dashboard
-streamlit run dashboard/streamlit_app.py --server.port 8501
-
-# Terminal 3 — MLflow UI (optional)
-mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
-```
-
 ### Remote MLflow Tracking (DagsHub)
 If you want to track experiments remotely instead of locally, set up DagsHub:
 ```bash
@@ -233,24 +226,9 @@ export MLFLOW_TRACKING_PASSWORD="YOUR_DAGSHUB_TOKEN"
 python src/pipeline/run_pipeline.py
 ```
 
-### Test the API
-```bash
-python scripts/test_api.py
-```
-
-### Run Agent Evaluation
-```bash
-python scripts/evaluate_agent.py
-```
-
-### Run Drift Detection
-```bash
-python src/monitoring/drift_detector.py
-```
-
 ---
 
-## API Endpoints
+## 📡 API Endpoints
 
 ### `GET /health`
 Returns server status, model names, and vector index size.
@@ -279,7 +257,7 @@ Returns: Full `TriageResponse` with classification, SLA risk, routing decision, 
 
 ---
 
-## MLOps Pipeline
+## 📈 MLOps Pipeline Phases
 
 ```
 Phase 1:  Raw Data Ingestion (GitHub API + HuggingFace + Synthetic)
@@ -295,8 +273,6 @@ Phase 9:  Evaluation (RAGAS LLM Judge + PSI drift detection)
 
 ---
 
-
-
-## License
+## 📜 License
 
 MIT License — see [LICENSE](./LICENSE)
