@@ -13,7 +13,7 @@ HF_TOKEN = os.environ.get("HF_TOKEN", "")
 if not HF_TOKEN:
     raise ValueError("Set HF_TOKEN environment variable. Get token from https://huggingface.co/settings/tokens")
 
-REPO_ID = "saibalajinamburi/SupportPulse"
+REPO_ID = "saibalajiomg/SupportPulse"
 REPO_TYPE = "space"
 
 api = HfApi(token=HF_TOKEN)
