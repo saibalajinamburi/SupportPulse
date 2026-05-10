@@ -17,6 +17,7 @@ from src.models.classifier import classify_ticket
 from src.models.sla_model import predict_sla_risk
 from src.vector.indexer import load_index
 from src.vector.retriever import embed_text
+from src.monitoring.request_logger import log_triage
 
 
 @asynccontextmanager
@@ -108,7 +109,7 @@ def triage_ticket(request: TicketRequest):
         "customer_tier_encoded": 1, "source_encoded": 0,
     })
 
-    return TriageResponse(
+    response = TriageResponse(
         ticket_id=result.ticket_id,
         subject=result.subject,
         classification=ClassificationResult(
@@ -128,6 +129,25 @@ def triage_ticket(request: TicketRequest):
         timings_ms=result.timings,
         total_ms=result.total_ms,
     )
+
+    # Persist to observability log (async-safe: SQLite write is fast)
+    try:
+        log_triage(
+            ticket_id=result.ticket_id,
+            subject=request.subject,
+            category=result.category,
+            priority=result.priority,
+            routing_team=result.routing_team,
+            auto_escalate=result.auto_escalate,
+            sla_risk=sla_result["sla_risk_score"],
+            confidence=result.classification_confidence,
+            timings=result.timings,
+            run_rag=request.run_rag,
+        )
+    except Exception:
+        pass  # Never let logging break the response
+
+    return response
 
 
 @app.post("/classify", response_model=ClassifyResponse, tags=["Triage"])
