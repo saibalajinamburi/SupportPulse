@@ -29,7 +29,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}/supportpulse-api
+          images: ghcr.io/${{ github.repository_owner }}/supportpulse-api
           tags: |
             type=sha,format=short
             type=raw,value=latest
@@ -47,4 +47,4 @@ jobs:
         run: |
           echo "=== Deployment Complete ==="
           echo "Image successfully pushed to GitHub Container Registry!"
-          echo "Image URI: ghcr.io/${{ github.repository }}/supportpulse-api:latest"
+          echo "Image URI: ghcr.io/${{ github.repository_owner }}/supportpulse-api:latest"
