@@ -1509,4 +1509,85 @@ In production you'd run the PII masker from Phase 2 on the subject before loggin
 
 ---
 
-## Next: Phase 9 — Automated RAGAS Evaluation & Drift Detection
+## Phase 9: Automated RAGAS Evaluation & Drift Detection
+
+### Why We Can't Just Use Accuracy Anymore
+In traditional machine learning (Phase 3's LightGBM), evaluating a model is easy: you compare the prediction to the true label and calculate Accuracy, Precision, Recall, and F1 Score.
+
+When we move to Generative AI (Phase 5's RAG pipeline), the model outputs *natural language paragraphs*. You cannot use standard accuracy metrics because there is no single "correct" paragraph. A generated response could be written in 100 different ways and still be correct.
+
+**How do we automatically evaluate RAG at scale in production?**
+We use the **RAGAS (Retrieval-Augmented Generation Assessment) framework** combined with the **LLM-as-a-Judge pattern**.
+
+### 1. The LLM-as-a-Judge Pattern (`rag_evaluator.py`)
+
+Instead of a human reading every generated response, we use a larger, smarter model (the "teacher") to grade the smaller model (the "student").
+- **Student:** `gemma2:2b` (generates the RAG response)
+- **Judge:** `gemma4:e4b` (evaluates the response)
+
+We built two core RAGAS metrics:
+
+#### Metric 1: Faithfulness (Preventing Hallucination)
+- **Question it answers:** *"Did the model make things up?"*
+- **How it works:** The Judge LLM looks at the generated answer and the retrieved historical tickets. It extracts all the claims made in the answer, and verifies if every single claim can be found in the retrieved tickets.
+- **Why it matters:** In enterprise support, a model saying "I don't know" is acceptable. A model confidently telling a customer to "run DROP TABLE" because it hallucinated a solution is a catastrophic failure.
+
+#### Metric 2: Answer Relevance
+- **Question it answers:** *"Did the model actually answer the user's question?"*
+- **How it works:** The Judge LLM compares the user's original ticket to the generated answer. If the user asked "Why is my invoice in EUR?" and the model generated a perfect, faithful summary about "How to reset your password", the Answer Relevance score is 0.0.
+
+#### Evaluation Result Example
+```
+Testing Faithfulness...
+Score: 1.0 | Reason: The answer directly summarizes the cause and fix provided in the context (500 errors caused by database connection pool exhaustion; fix: restart pgbouncer).
+
+Testing Relevance...
+Score: 0.8 | Reason: The answer provides a highly probable cause and a direct, actionable solution. While it doesn't offer a full diagnostic checklist, it directly addresses the issue.
+```
+
+### 2. Concept Drift Detection (`drift_detector.py`)
+
+Machine learning models degrade over time because the real world changes. This is called **Model Drift**.
+
+There are two main types of drift:
+1. **Data Drift (Feature Drift):** The inputs change. (e.g., tickets get longer, or more tickets are submitted on weekends).
+2. **Concept Drift (Label Drift):** The relationship between inputs and outputs changes, or the distribution of labels changes. (e.g., a new product launches, and suddenly 40% of all tickets are "billing", whereas during training, "billing" was only 5%).
+
+#### How We Detect It: PSI and KL Divergence
+We built a script that reads the baseline category distribution from our Phase 2 training data (`train.parquet`) and compares it against the live production traffic logged in Phase 8 (`requests.db`).
+
+We calculate two statistical metrics:
+
+**1. Population Stability Index (PSI)**
+PSI is the industry standard in finance and ML for comparing two distributions.
+- **PSI < 0.1:** No significant change. The model is safe.
+- **0.1 ≤ PSI < 0.2:** Slight shift. Monitor the system closely.
+- **PSI ≥ 0.2:** Significant drift. The live data no longer resembles the training data. **Action required: Retrain the model.**
+
+**2. Kullback-Leibler (KL) Divergence**
+KL Divergence measures how much information is lost if we assume the live distribution is the same as the training distribution. It’s a more sensitive, asymmetric measure used in deep learning, complementing PSI.
+
+### Phase 9 — Interview Questions & Answers
+
+**Q: If the LLM-as-a-judge is an AI, how do you know the judge isn't wrong?**
+A: You don't, which is why LLM-as-a-judge is not used for 100% automated decision making. It is used for **directional signaling**. If the judge says your average Faithfulness dropped from 0.95 to 0.60 after a prompt update, you have a problem. To validate the judge, you typically have human annotators grade a "Golden Set" of 100 tickets, and you measure the correlation between the LLM Judge's scores and the Human scores. If correlation is >0.8, the judge is trustworthy.
+
+**Q: Why don't you use BLEU or ROUGE scores to evaluate the text?**
+A: BLEU and ROUGE are n-gram matching metrics (they check if exact words overlap). They are terrible for LLM evaluation because they penalize paraphrasing. If the true answer is "Restart the server" and the model says "Reboot the backend instance", BLEU gives a score of 0 because no words match, but semantically it is a perfect answer. RAGAS and LLM Judges evaluate *semantics*, not *syntax*.
+
+**Q: What do you do when PSI detects significant drift (PSI > 0.2)?**
+A: Drift detection is a trigger, not a solution. The workflow is:
+1. PSI > 0.2 triggers an alert to the MLOps engineer.
+2. The engineer investigates: Is this a permanent shift (new product launch) or a temporary anomaly (AWS is down causing a spike in incident tickets)?
+3. If it's a permanent shift, we trigger the Phase 2 pipeline to generate new embeddings and features on the last 30 days of live data, and retrain the LightGBM and Classifier models.
+4. We deploy the new models via Shadow Deployment to verify they fix the drift before routing live traffic.
+
+### Phase 9 Conclusion
+- Implemented **LLM-as-a-Judge** using `gemma4:e4b` to grade RAG outputs for Faithfulness and Relevance.
+- Implemented **Drift Detection** comparing training data vs live SQLite logs using Population Stability Index (PSI) and KL Divergence.
+- The platform now has a complete MLOps lifecycle: Ingestion → Training → Serving → Monitoring → Drift Detection.
+- GitHub: ✅ Pushed (`src/monitoring/rag_evaluator.py`, `src/monitoring/drift_detector.py`)
+
+---
+
+## Next: Phase 10 — Final Project Polish & Containerization Strategy
