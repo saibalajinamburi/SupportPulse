@@ -38,6 +38,7 @@ pydantic
 pydantic-settings
 python-dotenv
 httpx
+prometheus-fastapi-instrumentator
 
 # ── Authentication ──
 python-jose[cryptography]

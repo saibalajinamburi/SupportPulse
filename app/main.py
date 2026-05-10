@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import settings
 from app.schemas import (
@@ -57,6 +58,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Instrument the app to expose /metrics for Prometheus
+Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,
