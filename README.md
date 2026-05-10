@@ -132,6 +132,7 @@ Supports 100+ languages and hybrid search (dense semantic + sparse keyword). Cri
 
 ```bash
 SupportPulse/
+├── .github/workflows/          # ⚙️ CI/CD GitHub Actions (Docker build & push)
 ├── app/                        # ⚡ FastAPI gateway
 │   ├── main.py                 # Lifespan pre-warming, 3 endpoints
 │   ├── schemas.py              # Pydantic request/response models
@@ -147,12 +148,17 @@ SupportPulse/
 │   └── vector/                 # ChromaDB Vector Search
 ├── scripts/                    # 🧪 Testing & Utilities
 │   ├── test_api.py             # Full API test suite
-│   ├── evaluate_agent.py       # 20-ticket agent accuracy evaluation
 │   ├── setup_grafana.py        # Automated Grafana dashboard provisioner
 │   └── generate_traffic.py     # Live API traffic load tester
+├── tests/                      # 🛡️ Pytest suite (38 total unit tests)
+├── gx/                         # ✅ Great Expectations data validation
+├── feature_store/              # 🏪 Feast feature store configuration
 ├── hf_space/                   # 🤗 HuggingFace Spaces Gradio App
-├── docker-compose.yml          # 🐳 Container orchestration spec
-└── requirements.txt            # 📦 Dependencies
+├── Images/                     # 📸 Documentation gallery assets
+├── Dockerfile                  # 🐳 FastAPI container build spec
+├── Dockerfile.streamlit        # 🐳 Streamlit container build spec
+├── docker-compose.yml          # 🐳 Multi-container orchestration
+└── requirements.txt            # 📦 Core Dependencies
 ```
 
 ---
