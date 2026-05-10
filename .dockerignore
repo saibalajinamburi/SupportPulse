@@ -1,0 +1,32 @@
+# Ignore large data directories
+data/
+mlruns/
+venv/
+.venv/
+env/
+.env/
+
+# Ignore local database and tracking
+mlflow.db
+data/requests.db
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore Git artifacts
+.git/
+.github/
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore large local images/assets not needed for the API
+Images/
+image/
+screenshot/
+*.png
+*.jpg
+*.jpeg
