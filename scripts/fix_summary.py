@@ -1,47 +1,88 @@
-"""Fix broken Unicode symbols in PROJECT_SUMMARY.md."""
+"""
+Complete fix for PROJECT_SUMMARY.md:
+- Strips ALL non-ASCII characters and replaces with clean ASCII equivalents
+- Fixes localhost URLs to correct ports
+- Saves as clean UTF-8
+"""
 
-REPLACEMENTS = [
-    # Unicode replacement chars from bad encoding
-    ('\ufffd', ''),
-    # Corrupted Greek capital gamma (from git show UTF-16 bleed)
-    ('\u0393', ''),
-    # Smart quotes -> regular quotes
-    ('\u201c', '"'), ('\u201d', '"'),
-    ('\u2018', "'"), ('\u2019', "'"),
-    # Em dash -> hyphen
-    ('\u2014', '--'),
-    # En dash -> hyphen
-    ('\u2013', '-'),
-    # Corrupted arrow sequences that come through as ?
-    # These are the ones git show wrote wrong; replace with ASCII equivalents
-    ('\u2192', '->'),   # ->
-    ('\u2190', '<-'),
-    ('\u2713', '[OK]'), # checkmark
-    ('\u2714', '[OK]'),
-    # Box-drawing chars that render badly on some viewers - keep them, they're fine in markdown
-]
+import re
 
-def fix_file(path: str):
-    with open(path, 'rb') as f:
-        raw = f.read()
+# Map of specific Unicode chars to ASCII replacements
+CHAR_MAP = {
+    '\u2192': '->',     # right arrow
+    '\u2190': '<-',     # left arrow
+    '\u2713': '[OK]',   # checkmark
+    '\u2714': '[OK]',   # heavy checkmark
+    '\u2718': '[X]',    # cross mark
+    '\u2717': '[X]',    # ballot X
+    '\u2714': '[OK]',
+    '\u2022': '-',      # bullet
+    '\u2023': '-',      # triangular bullet
+    '\u25b6': '>',      # right pointing triangle
+    '\u25c0': '<',      # left pointing triangle
+    '\u2014': '--',     # em dash
+    '\u2013': '-',      # en dash
+    '\u2012': '-',      # figure dash
+    '\u201c': '"',      # left double quote
+    '\u201d': '"',      # right double quote
+    '\u2018': "'",      # left single quote
+    '\u2019': "'",      # right single quote
+    '\u00b7': '-',      # middle dot
+    '\u00d7': 'x',      # multiplication sign
+    '\u00e9': 'e',      # e with accent
+    '\u00e0': 'a',      # a with accent
+    '\u00e8': 'e',      # e with grave
+    '\u2026': '...',    # ellipsis
+    '\u00a0': ' ',      # non-breaking space
+    '\ufffd': '',       # replacement char (was already broken)
+    '\u0393': '',       # Greek gamma (encoding artifact)
+    '\u00c7': 'C',      # C cedilla
+    '\u00f6': 'o',      # o umlaut
+    '\u00e7': 'c',      # c cedilla
+    '\u00a3': 'GBP',    # pound sign (was encoding artifact)
+    '\u00e2': 'a',      # a circumflex (encoding artifact)
+}
 
-    # Detect encoding
-    if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
-        content = raw.decode('utf-16')
-    else:
-        content = raw.decode('utf-8', errors='replace')
-
-    original = content
-    for bad, good in REPLACEMENTS:
+def clean(content: str) -> str:
+    for bad, good in CHAR_MAP.items():
         content = content.replace(bad, good)
+    # Replace any remaining non-ASCII chars
+    result = []
+    for ch in content:
+        if ord(ch) > 127:
+            result.append('')  # drop unknown non-ASCII
+        else:
+            result.append(ch)
+    return ''.join(result)
 
-    changed = sum(1 for a, b in zip(original.splitlines(), content.splitlines()) if a != b)
-    print(f"Lines changed: {changed}")
+def fix_localhost_urls(content: str) -> str:
+    """Ensure localhost URLs use correct port numbers."""
+    # Fix any broken localhost references
+    content = re.sub(r'localhost:\s*(\d+)', r'localhost:\1', content)
+    return content
 
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(content)
+with open('PROJECT_SUMMARY.md', 'rb') as f:
+    raw = f.read()
 
-    print(f"Fixed and saved as UTF-8: {path}")
+# Detect encoding
+if raw[:2] in (b'\xff\xfe', b'\xfe\xff'):
+    content = raw.decode('utf-16')
+    print("Was UTF-16, converting to UTF-8")
+else:
+    content = raw.decode('utf-8', errors='replace')
+    print("Was UTF-8 (with replacements)")
 
-if __name__ == '__main__':
-    fix_file('PROJECT_SUMMARY.md')
+original_len = len(content)
+content = clean(content)
+content = fix_localhost_urls(content)
+
+# Final check
+remaining = sum(1 for ch in content if ord(ch) > 127)
+print(f"Original length: {original_len}")
+print(f"Final length:    {len(content)}")
+print(f"Non-ASCII chars remaining: {remaining}")
+
+with open('PROJECT_SUMMARY.md', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("PROJECT_SUMMARY.md saved as clean UTF-8.")

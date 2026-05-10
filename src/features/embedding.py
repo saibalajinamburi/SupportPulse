@@ -26,7 +26,7 @@ def _embed_single(text: str) -> List[float]:
     except requests.exceptions.ConnectionError:
         print("\n[Embedding] ERROR: Ollama is not running!")
         sys.exit(1)
-    except Exception as e:
+    except Exception:
         # print(f"\n[Embedding] ERROR calling Ollama: {e}")
         return []
 
@@ -53,7 +53,7 @@ def embed_texts(texts: List[str], batch_size: int = BATCH_SIZE) -> np.ndarray:
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         # Use tqdm for a beautiful, real-time progress bar
-        with tqdm(total=total, desc=f"  [Embedding] {split_name if 'split_name' in locals() else ''}", unit="ticket") as pbar:
+        with tqdm(total=total, desc="  [Embedding] Generating vectors", unit="ticket") as pbar:
             for i in range(0, total, batch_size):
                 chunk_indices = range(i, min(i + batch_size, total))
                 results = list(executor.map(process_item, chunk_indices))
@@ -63,7 +63,7 @@ def embed_texts(texts: List[str], batch_size: int = BATCH_SIZE) -> np.ndarray:
                 
                 pbar.update(len(results))
 
-    print(f"\n  [Embedding] Done. Finalizing matrix...")
+    print("\n  [Embedding] Done. Finalizing matrix...")
     matrix = np.array(all_embeddings, dtype=np.float32)
     return matrix
 

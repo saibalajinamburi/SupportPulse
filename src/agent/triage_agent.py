@@ -104,7 +104,7 @@ def triage(
 
     category = clf.get("category", "question")
     priority = clf.get("priority", "medium")
-    routing_team_from_clf = clf.get("routing_team", "support")
+    # routing_team from classifier is overridden by deterministic rules below
 
     # 2. SLA Breach Prediction
     t0 = time.time()
