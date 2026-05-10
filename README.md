@@ -1,8 +1,15 @@
 # SupportPulse Intelligence Platform
 
-> **End-to-End Production MLOps | LLM Cascade · RAG · ChromaDB · LightGBM · FastAPI · Streamlit**
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/saibalajiomg/SupportPulse)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-blue?logo=docker)](https://github.com/saibalajinamburi/SupportPulse/blob/main/docker-compose.yml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)](http://localhost:8000/docs)
+[![Grafana](https://img.shields.io/badge/Grafana-Observability-orange?logo=grafana)](http://localhost:3000)
+
+> **End-to-End Production MLOps | LLM Cascade · RAG · ChromaDB · LightGBM · FastAPI · Streamlit · Prometheus · Grafana**
 
 A production-grade AI support ticket triage system that automatically classifies, prioritizes, routes, and generates grounded resolutions for support tickets — built with a full MLOps lifecycle from raw data ingestion through drift monitoring.
+
+![Streamlit Live Triage Dashboard](Images/Streamlit_Live_Triage.png)
 
 ---
 
@@ -10,9 +17,13 @@ A production-grade AI support ticket triage system that automatically classifies
 
 | Service | URL | Description |
 |---|---|---|
+| **HuggingFace Space** | [Live Demo](https://huggingface.co/spaces/saibalajiomg/SupportPulse) | Public interactive Gradio UI with pre-computed results |
 | **FastAPI** | `http://localhost:8000/docs` | Swagger UI — interactive endpoint testing |
-| **Streamlit Dashboard** | `http://localhost:8501` | 4-page monitoring & live triage UI |
+| **Streamlit Dashboard** | `http://localhost:8501` | 4-page monitoring & live AI triage UI |
 | **MLflow UI** | `http://localhost:5000` | Experiment tracking & model registry |
+| **DagsHub** | `Remote Tracking URL` | Remote MLflow tracking & Data versioning (Optional) |
+| **Grafana** | `http://localhost:3000` | DevOps observability & hardware metrics |
+| **Prometheus** | `http://localhost:9090` | Time-series metrics scraper |
 
 ---
 
@@ -66,8 +77,10 @@ A production-grade AI support ticket triage system that automatically classifies
 
 ## Key Design Decisions
 
-### 1. LLM Cascade — Why Two Models?
-Using `gemma4:e4b` (10GB) for every ticket would take ~90 seconds each. Using `gemma2:2b` (1.6GB) alone misses ambiguous edge cases. The **cascade pattern** routes every ticket through the fast small model first; only tickets with confidence < 0.75 escalate to the larger model. Result: **~5 second average latency with near-large-model accuracy.**
+### 1. LLM Cascade — Why Two Models (`gemma2:2b` & `gemma4:e4b`)?
+Using `gemma4:e4b` (a powerful, highly capable fallback model) for every ticket provides maximum accuracy but is slower and resource-intensive. Using `gemma2:2b` (a lightweight, ultra-fast primary model) is highly efficient but can sometimes struggle with complex, ambiguous edge cases.
+
+The **Cascade Pattern** solves this: every ticket is routed through the fast `gemma2:2b` first. If its confidence score falls below 0.75, the system automatically escalates the ticket to the highly credible `gemma4:e4b` fallback model. Result: **~5 second average latency while retaining enterprise-grade large-model accuracy.**
 
 ### 2. Deterministic Routing Agent — Not LangChain
 An autonomous LangChain agent might route a SQL injection ticket to the billing team if the ticket mentions payment data. With hardcoded routing rules, the decision is always auditable: `security + critical → security team, always`. For enterprise production, predictability beats autonomy.
@@ -113,7 +126,7 @@ SupportPulse/
 │   ├── test_api.py             # Full API test suite
 │   └── evaluate_agent.py       # 20-ticket agent accuracy evaluation
 ├── feature_store/              # Feast feature store configuration
-├── PROJECT_SUMMARY.md          # Deep technical documentation (interview prep)
+├── hf_space/                   # HuggingFace Spaces Gradio App
 ├── docker-compose.yml          # Container orchestration spec
 └── requirements.txt            # All dependencies
 ```
@@ -171,7 +184,13 @@ ollama pull bge-m3
 ollama pull gemma4:e4b
 ```
 
-### Start Services
+### Start Services (Via Docker)
+The easiest way to run the entire stack (FastAPI, Streamlit, MLflow, Prometheus, Grafana) is via Docker Compose:
+```bash
+docker-compose up -d
+```
+
+### Start Services (Manual Local)
 ```bash
 # Terminal 1 — API Server
 uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -181,6 +200,18 @@ streamlit run dashboard/streamlit_app.py --server.port 8501
 
 # Terminal 3 — MLflow UI (optional)
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
+```
+
+### Remote MLflow Tracking (DagsHub)
+If you want to track experiments remotely instead of locally, set up DagsHub:
+```bash
+# 1. Set your credentials
+export MLFLOW_TRACKING_URI="https://dagshub.com/YOUR_USERNAME/SupportPulse.mlflow"
+export MLFLOW_TRACKING_USERNAME="YOUR_USERNAME"
+export MLFLOW_TRACKING_PASSWORD="YOUR_DAGSHUB_TOKEN"
+
+# 2. Run the pipeline - metrics will log to the cloud automatically
+python src/pipeline/run_pipeline.py
 ```
 
 ### Test the API
@@ -245,16 +276,7 @@ Phase 9:  Evaluation (RAGAS LLM Judge + PSI drift detection)
 
 ---
 
-## Interview-Level Documentation
 
-See [`PROJECT_SUMMARY.md`](./PROJECT_SUMMARY.md) for deep technical explanations of every design decision, including:
-- Why LLM Cascade beats single-model approaches
-- How HNSW enables 2ms vector search over 68k documents
-- Why RAG beats fine-tuning for support use cases
-- How PSI drift detection triggers model retraining
-- All interview Q&A organized by phase
-
----
 
 ## License
 
