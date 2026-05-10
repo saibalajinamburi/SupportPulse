@@ -11,8 +11,11 @@ import sqlite3
 from pathlib import Path
 from scipy.stats import entropy
 
-DB_PATH = Path("data/requests.db")
-TRAIN_PARQUET = Path("data/gold/train.parquet")
+# Use absolute paths relative to the script location so it works from any cwd
+_ROOT = Path(__file__).resolve().parent.parent.parent
+DB_PATH = _ROOT / "data" / "requests.db"
+TRAIN_PARQUET = _ROOT / "data" / "gold" / "train.parquet"
+MIN_LIVE_SAMPLES = 20  # Need at least this many live records for meaningful drift
 
 def get_train_distribution() -> pd.Series:
     """Get category distribution from training data."""
@@ -67,37 +70,51 @@ def calculate_kl_divergence(expected: pd.Series, actual: pd.Series) -> float:
     
     return float(entropy(act, exp))
 
+def get_live_sample_count() -> int:
+    """Return the number of rows in the live log."""
+    if not DB_PATH.exists():
+        return 0
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        return conn.execute("SELECT COUNT(*) FROM triage_log").fetchone()[0]
+
+
 def run_drift_check():
     """Run full drift evaluation."""
     print("Running Drift Detection...\n")
-    
+
     try:
         train_dist = get_train_distribution()
         live_dist = get_live_distribution()
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return
-        
+
     if live_dist.empty:
-        print("Not enough live data to calculate drift. Submit tickets to API first.")
+        print("No live data found. Submit tickets via the API first.")
         return
-        
-    print(f"Comparing {len(train_dist)} training categories vs {len(live_dist)} live categories.")
-    
+
+    n_live = get_live_sample_count()
+    if n_live < MIN_LIVE_SAMPLES:
+        print(f"[WARNING] Only {n_live} live samples (need >={MIN_LIVE_SAMPLES} for reliable drift detection).")
+        print("PSI will be inflated with small samples - results below are indicative only.\n")
+
+    print(f"Training categories: {len(train_dist)} | Live categories: {len(live_dist)} | Live samples: {n_live}")
+
     psi = calculate_psi(train_dist, live_dist)
     kl_div = calculate_kl_divergence(train_dist, live_dist)
-    
+
     print("\n--- Drift Metrics ---")
     print(f"Population Stability Index (PSI): {psi:.4f}")
     print(f"KL Divergence:                    {kl_div:.4f}")
-    
+
     print("\n--- Interpretation ---")
     if psi < 0.1:
-        print("✅ No significant drift detected (PSI < 0.1).")
+        print("[OK]     No significant drift detected (PSI < 0.1).")
     elif psi < 0.2:
-        print("⚠️ Slight drift detected (0.1 <= PSI < 0.2). Monitor closely.")
+        print("[WARN]   Slight drift detected (0.1 <= PSI < 0.2). Monitor closely.")
     else:
-        print("🚨 SIGNIFICANT DRIFT DETECTED (PSI >= 0.2). Model retraining recommended!")
-        
+        print("[ALERT]  SIGNIFICANT DRIFT (PSI >= 0.2). Consider model retraining!")
+
+
 if __name__ == "__main__":
     run_drift_check()
