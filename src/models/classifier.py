@@ -1,4 +1,4 @@
-"""Gemma4 Zero-Shot Ticket Classifier."""
+"""LLM Cascade Ticket Classifier — fast primary model with smart fallback."""
 
 import json
 import os
@@ -86,10 +86,35 @@ def classify_ticket(
     subject: str,
     body: str,
     model: str = None,
+    fallback_model: str = None,
     timeout: int = 60
 ) -> dict:
-    """Classify a single support ticket using Gemma4 via Ollama (GPU-accelerated)."""
-    model = model or settings.OLLAMA_LLM_MODEL
+    """Classify ticket using LLM Cascade (fast model first, heavy model if uncertain)."""
+    primary_model = model or settings.OLLAMA_LLM_MODEL
+    
+    # 1. Try Primary Model (Fast)
+    result = _run_ollama(subject, body, primary_model)
+    
+    # 2. Evaluate if we need to Escalate (Cascade)
+    needs_escalation = (
+        fallback_model is not None 
+        and (result.get("error") or result.get("confidence", 0.0) < 0.75)
+    )
+    
+    if needs_escalation:
+        fallback_result = _run_ollama(subject, body, fallback_model)
+        # Only override if fallback actually succeeded or primary had an error
+        if not fallback_result.get("error") or result.get("error"):
+            fallback_result["escalated"] = True
+            fallback_result["primary_model"] = primary_model
+            return fallback_result
+            
+    result["escalated"] = False
+    return result
+
+
+def _run_ollama(subject: str, body: str, model_name: str) -> dict:
+    """Internal helper to run Ollama generation."""
     prompt = CLASSIFICATION_PROMPT.format(
         subject=subject[:500],
         body=body[:2000]
@@ -98,7 +123,7 @@ def classify_ticket(
     start = time.time()
     try:
         response = ollama.chat(
-            model=model,
+            model=model_name,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt}
@@ -120,52 +145,67 @@ def classify_ticket(
             result = _validate_and_fix(parsed)
 
         result["latency_ms"] = round(elapsed * 1000, 1)
-        result["model"] = model
+        result["model"] = model_name
         return result
 
     except Exception as e:
         fallback = FALLBACK_RESULT.copy()
         fallback["error"] = str(e)
         fallback["latency_ms"] = round((time.time() - start) * 1000, 1)
-        fallback["model"] = model
+        fallback["model"] = model_name
         return fallback
 
 
 def classify_batch(
     tickets: list[dict],
     model: str = None,
+    fallback_model: str = None,
+    use_cascade: bool = True,
     show_progress: bool = True
 ) -> list[dict]:
-    """Classify a list of tickets with real-time progress and ETA."""
+    """Classify tickets using the LLM Cascade pattern with ETA progress."""
     results = []
     total = len(tickets)
     start_time = time.time()
+    escalated_count = 0
+
+    # Auto-resolve models from settings if not provided
+    primary = model or settings.OLLAMA_LLM_MODEL
+    fallback = fallback_model or (settings.OLLAMA_FALLBACK_MODEL if use_cascade else None)
 
     for i, ticket in enumerate(tickets):
         result = classify_ticket(
             subject=ticket.get("subject", ""),
             body=ticket.get("body", ""),
-            model=model
+            model=primary,
+            fallback_model=fallback
         )
         result["ticket_id"] = ticket.get("ticket_id", "")
         results.append(result)
 
+        if result.get("escalated"):
+            escalated_count += 1
+
         if show_progress and (i + 1) % 5 == 0:
+            import datetime
             elapsed = time.time() - start_time
             rate = (i + 1) / elapsed if elapsed > 0 else 1
             remaining = (total - (i + 1)) / rate if rate > 0 else 0
             pct = ((i + 1) / total) * 100
-            import datetime
             eta = str(datetime.timedelta(seconds=int(remaining)))
             avg_ms = (elapsed / (i + 1)) * 1000
             print(
-                f"  [Classifier] {pct:5.1f}% | {i+1}/{total} "
-                f"| avg={avg_ms:.0f}ms/ticket | ETA={eta}   ",
-                end="\r"
+                f"  [Cascade] {pct:5.1f}% | {i+1}/{total}"
+                f" | avg={avg_ms:.0f}ms | escalated={escalated_count} | ETA={eta}  ",
+                end="\r", flush=True
             )
 
     if show_progress:
         total_time = time.time() - start_time
-        print(f"  [Classifier] 100.0% | {total}/{total} | Done in {total_time:.1f}s          ")
+        esc_pct = (escalated_count / total) * 100 if total > 0 else 0
+        print(
+            f"  [Cascade] Done | {total}/{total} in {total_time:.1f}s"
+            f" | {escalated_count} escalated ({esc_pct:.1f}% hit fallback)"
+        )
 
     return results

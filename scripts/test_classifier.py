@@ -1,46 +1,63 @@
-"""Quick GPU classifier test — 3 sample tickets."""
-import os
+"""Test the LLM Cascade (fast 2b primary + smart 4b fallback)."""
 import time
 import sys
+from pathlib import Path
 
-from src.models.classifier import classify_ticket
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.models.classifier import classify_ticket, classify_batch
+from app.config import settings
 
 tickets = [
-    (
-        "Server completely down - users cannot login",
-        "Our production API server has been throwing 502 errors for the past 30 minutes. "
-        "All users are affected. This is a critical P0 incident. Revenue is being lost every minute."
-    ),
-    (
-        "Add dark mode to dashboard",
-        "Hi team, could you please add a dark mode toggle to the main dashboard? "
-        "Many users have requested this feature including myself."
-    ),
-    (
-        "SQL injection vulnerability in login form",
-        "I discovered that the login endpoint is vulnerable to SQL injection. "
-        "Input like OR 1=1 bypasses authentication completely. Needs immediate patching."
-    ),
+    {
+        "ticket_id": "T001",
+        "subject": "Server completely down - users cannot login",
+        "body": "Our production API server has been throwing 502 errors for 30 minutes. All users affected. Revenue being lost every minute."
+    },
+    {
+        "ticket_id": "T002",
+        "subject": "Add dark mode to dashboard",
+        "body": "Could you please add a dark mode toggle? Many users have requested this."
+    },
+    {
+        "ticket_id": "T003",
+        "subject": "SQL injection vulnerability in login form",
+        "body": "The login endpoint is vulnerable to SQL injection. OR 1=1 bypasses authentication. Needs immediate patching."
+    },
+    {
+        "ticket_id": "T004",
+        "subject": "Billing charge incorrect",
+        "body": "We were charged $2,400 this month but our plan is $800/month. Please refund and fix the billing system."
+    },
+    {
+        "ticket_id": "T005",
+        "subject": "API latency increased 300%",
+        "body": "Since yesterday's deployment our API response times went from 50ms to 200ms. All regions affected."
+    },
 ]
 
-print("=" * 60, flush=True)
-print("  SupportPulse - Gemma4 Classifier Test (GPU 1 - NVIDIA)", flush=True)
-print("  Watch Task Manager > GPU 1 for activity", flush=True)
-print("=" * 60, flush=True)
+print("=" * 65)
+print("  SupportPulse - LLM Cascade Test")
+print(f"  Primary  : {settings.OLLAMA_LLM_MODEL} (fast, fits in VRAM)")
+print(f"  Fallback : {settings.OLLAMA_FALLBACK_MODEL} (smart, used only when needed)")
+print("=" * 65)
 
-for subject, body in tickets:
-    print(f"\nTicket: {subject}", flush=True)
-    t0 = time.time()
-    result = classify_ticket(subject, body)
-    elapsed = time.time() - t0
-    print(f"  category     : {result.get('category')}", flush=True)
-    print(f"  priority     : {result.get('priority')}", flush=True)
-    print(f"  routing_team : {result.get('routing_team')}", flush=True)
-    print(f"  confidence   : {result.get('confidence')}", flush=True)
-    print(f"  latency      : {result.get('latency_ms')}ms", flush=True)
-    if result.get("error"):
-        print(f"  ERROR        : {result.get('error')}", flush=True)
+results = classify_batch(tickets, show_progress=True)
 
-print("\n" + "=" * 60, flush=True)
-print("  Test complete.", flush=True)
-print("=" * 60, flush=True)
+print()
+print(f"  {'ID':<6} {'Category':<12} {'Priority':<10} {'Routing':<12} {'Conf':<6} {'Escalated':<10} {'Model'}")
+print(f"  {'-'*6} {'-'*12} {'-'*10} {'-'*12} {'-'*6} {'-'*10} {'-'*15}")
+for r in results:
+    model_tag = r.get("model", "").replace("gemma4:e4b", "FALLBACK").replace("gemma2:2b", "fast")
+    print(
+        f"  {r.get('ticket_id',''):<6} "
+        f"{r.get('category',''):<12} "
+        f"{r.get('priority',''):<10} "
+        f"{r.get('routing_team',''):<12} "
+        f"{r.get('confidence', 0):<6.2f} "
+        f"{'YES' if r.get('escalated') else 'no':<10} "
+        f"{model_tag}"
+    )
+    if r.get("error"):
+        print(f"         ERROR: {r.get('error')}")
+
+print("=" * 65)
