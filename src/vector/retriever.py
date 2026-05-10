@@ -19,9 +19,13 @@ def _get_collection():
 
 def embed_text(text: str) -> list[float]:
     """Embed a single text string using BGE-M3 via Ollama (GPU-accelerated)."""
+    # Sanitize: remove non-ASCII characters that cause Ollama JSON encoding errors
+    clean_text = text.encode("ascii", errors="ignore").decode("ascii").strip()
+    if not clean_text:
+        clean_text = "empty"
     response = ollama.embed(
         model=settings.OLLAMA_EMBED_MODEL,
-        input=text
+        input=clean_text
     )
     return response["embeddings"][0]
 
