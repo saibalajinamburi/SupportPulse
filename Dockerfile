@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install build dependencies required by Python 3.12
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Note: setuptools < 70 is required for feast compatibility
+RUN pip install --no-cache-dir "setuptools<70" "pip<24.1" wheel
 
 # Install project dependencies
 RUN pip install --no-cache-dir -r requirements.txt
