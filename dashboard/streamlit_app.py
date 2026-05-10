@@ -1,6 +1,7 @@
 """
 SupportPulse Dashboard — Streamlit monitoring and live triage UI.
 Run with: streamlit run dashboard/streamlit_app.py
+Requires: pip install streamlit pandas requests
 """
 
 import sys
@@ -25,33 +26,46 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ── Custom CSS ────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+[data-testid="stMetricValue"] { font-size: 1.3rem !important; }
+[data-testid="stSidebar"] { background: #0e1117; }
+.stAlert { border-radius: 8px; }
+</style>
+""", unsafe_allow_html=True)
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/technical-support.png", width=64)
-    st.title("SupportPulse")
+    st.markdown("## 🎯 SupportPulse")
     st.caption("AI-Powered Ticket Triage")
     st.divider()
+
     page = st.radio(
         "Navigate",
         ["🎯 Live Triage", "📊 Analytics", "🔍 Request Log", "💚 System Health"],
-        label_visibility="collapsed"
     )
     st.divider()
 
-    # Quick API health check
+    # Quick API health check in sidebar
     try:
-        health = requests.get(f"{API_BASE}/health", timeout=3).json()
-        st.success("API: Online")
-        st.caption(f"Index: {health['vector_index_size']:,} tickets")
+        health_resp = requests.get(f"{API_BASE}/health", timeout=3)
+        health_resp.raise_for_status()
+        h = health_resp.json()
+        st.success("✅ API: Online")
+        st.caption(f"📦 {h.get('vector_index_size', 0):,} tickets indexed")
+        st.caption(f"🤖 {h.get('llm_model', 'N/A')}")
     except Exception:
-        st.error("API: Offline")
-        st.caption("Start: uvicorn app.main:app")
+        st.error("❌ API: Offline")
+        st.caption("Run: uvicorn app.main:app --port 8000")
 
 
-# ── Live Triage Page ──────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE 1: Live Triage
+# ─────────────────────────────────────────────────────────────────────────────
 if "🎯" in page:
     st.title("🎯 Live Ticket Triage")
-    st.caption("Submit a support ticket and watch the full AI pipeline run in real-time.")
+    st.caption("Submit a support ticket and see the full AI pipeline run in real-time.")
 
     with st.form("triage_form"):
         col1, col2 = st.columns([3, 1])
@@ -66,82 +80,109 @@ if "🎯" in page:
         body = st.text_area(
             "Ticket Description",
             placeholder="Describe the issue in detail...",
-            height=120
+            height=140,
         )
 
-        col_a, col_b, _ = st.columns([1, 1, 3])
-        with col_a:
-            run_rag = st.checkbox("Generate AI Response (RAG)", value=False)
-        with col_b:
-            submitted = st.form_submit_button("⚡ Triage Now", type="primary", use_container_width=True)
+        run_rag = st.checkbox(
+            "Generate AI Response via RAG (adds ~15s)",
+            value=False,
+        )
+        submitted = st.form_submit_button("⚡ Run Triage", type="primary", use_container_width=True)
 
-    if submitted and subject and body:
-        with st.spinner("Running AI triage pipeline..."):
-            t0 = time.time()
-            try:
-                resp = requests.post(
-                    f"{API_BASE}/triage",
-                    json={"ticket_id": ticket_id, "subject": subject, "body": body, "run_rag": run_rag},
-                    timeout=120,
-                )
-                elapsed = (time.time() - t0) * 1000
-                data = resp.json()
+    if submitted:
+        if not subject.strip() or not body.strip():
+            st.warning("Please fill in both Subject and Description.")
+        else:
+            with st.spinner("Running AI triage pipeline..."):
+                t0 = time.time()
+                try:
+                    resp = requests.post(
+                        f"{API_BASE}/triage",
+                        json={
+                            "ticket_id": ticket_id,
+                            "subject": subject,
+                            "body": body,
+                            "run_rag": run_rag,
+                        },
+                        timeout=180,
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    elapsed_ms = (time.time() - t0) * 1000
 
-                # ── Result Cards ──
-                st.divider()
-                c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Category", data["classification"]["category"].upper())
-                c2.metric("Priority", data["classification"]["priority"].upper())
-                c3.metric("Routing Team", data["routing_team"].upper())
-                c4.metric("Auto-Escalate", "🔴 YES" if data["auto_escalate"] else "🟢 NO")
+                    st.divider()
+                    st.subheader("📋 Triage Result")
 
-                c5, c6, c7, c8 = st.columns(4)
-                c5.metric("Confidence", f"{data['classification']['confidence']:.0%}")
-                c6.metric("SLA Risk", f"{data['sla_prediction']['sla_risk_score']:.0%}")
-                c7.metric("SLA Level", data['sla_prediction']['risk_level'].upper())
-                c8.metric("Total Latency", f"{elapsed:.0f}ms")
+                    # Row 1 — Classification & Routing
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.metric("Category", data["classification"]["category"].upper())
+                    c2.metric("Priority", data["classification"]["priority"].upper())
+                    c3.metric("Routing Team", data["routing_team"].upper())
+                    escalate_label = "🔴 YES" if data["auto_escalate"] else "🟢 NO"
+                    c4.metric("Auto-Escalate", escalate_label)
 
-                if data.get("auto_escalate"):
-                    st.warning(f"⚠️ **Escalation:** {data['escalation_reason']}")
+                    # Row 2 — Confidence, SLA, Latency
+                    c5, c6, c7, c8 = st.columns(4)
+                    conf = data["classification"].get("confidence", 0)
+                    c5.metric("Confidence", f"{conf:.0%}")
+                    sla_score = data["sla_prediction"].get("sla_risk_score", 0)
+                    c6.metric("SLA Risk", f"{sla_score:.0%}")
+                    c7.metric("SLA Level", data["sla_prediction"].get("risk_level", "N/A").upper())
+                    c8.metric("Latency", f"{elapsed_ms:.0f}ms")
 
-                # ── Similar Tickets ──
-                if data.get("similar_tickets"):
-                    st.subheader("📎 Similar Historical Tickets")
-                    sim_df = pd.DataFrame(data["similar_tickets"])
-                    sim_df["similarity"] = sim_df["similarity"].apply(lambda x: f"{x:.0%}")
-                    st.dataframe(sim_df[["ticket_id", "similarity", "category", "priority", "subject"]], use_container_width=True)
+                    if data.get("auto_escalate"):
+                        st.warning(f"⚠️ Escalated: {data.get('escalation_reason', '')}")
 
-                # ── RAG Response ──
-                if data.get("grounded_response"):
-                    st.subheader("🤖 AI-Generated Grounded Response")
-                    st.info(data["grounded_response"])
+                    # Similar Tickets
+                    similar = data.get("similar_tickets", [])
+                    if similar:
+                        st.subheader("📎 Similar Historical Tickets")
+                        sim_df = pd.DataFrame(similar)
+                        if "similarity" in sim_df.columns:
+                            sim_df["similarity"] = sim_df["similarity"].apply(lambda x: f"{float(x):.1%}")
+                        display_cols = [c for c in ["ticket_id", "similarity", "category", "priority", "subject"] if c in sim_df.columns]
+                        st.dataframe(sim_df[display_cols], use_container_width=True)
 
-                # ── Timings ──
-                with st.expander("⏱️ Pipeline Timing Breakdown"):
-                    timings = data["timings_ms"]
-                    timing_df = pd.DataFrame([
-                        {"Step": k.replace("_ms", "").title(), "Latency (ms)": v}
-                        for k, v in timings.items() if k != "total_ms"
-                    ])
-                    st.bar_chart(timing_df.set_index("Step"))
+                    # RAG Response
+                    rag_text = data.get("grounded_response")
+                    if rag_text:
+                        st.subheader("🤖 AI-Generated Grounded Response")
+                        st.info(rag_text)
 
-            except requests.exceptions.Timeout:
-                st.error("Request timed out. The model may be loading. Try again in 5 seconds.")
-            except Exception as e:
-                st.error(f"Error: {e}")
+                    # Timings breakdown
+                    timings = data.get("timings_ms", {})
+                    if timings:
+                        with st.expander("⏱️ Pipeline Timing Breakdown"):
+                            rows_t = [
+                                {"Step": k.replace("_ms", "").replace("_", " ").title(), "Latency (ms)": round(v, 1)}
+                                for k, v in timings.items() if k != "total_ms" and isinstance(v, (int, float))
+                            ]
+                            if rows_t:
+                                timing_df = pd.DataFrame(rows_t).set_index("Step")
+                                st.bar_chart(timing_df)
 
-    elif submitted:
-        st.warning("Please fill in both Subject and Description.")
+                except requests.exceptions.Timeout:
+                    st.error("⏱️ Request timed out. Model may be loading — try again in 10 seconds.")
+                except requests.exceptions.ConnectionError:
+                    st.error("❌ Cannot connect to API. Run: `uvicorn app.main:app --port 8000`")
+                except Exception as exc:
+                    st.error(f"❌ Unexpected error: {exc}")
 
 
-# ── Analytics Page ────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE 2: Analytics
+# ─────────────────────────────────────────────────────────────────────────────
 elif "📊" in page:
     st.title("📊 Triage Analytics")
 
-    stats = get_stats()
+    try:
+        stats = get_stats()
+    except Exception as e:
+        st.error(f"Could not load stats: {e}")
+        st.stop()
 
     if stats["total"] == 0:
-        st.info("No triage requests logged yet. Submit tickets on the Live Triage page.")
+        st.info("📭 No triage requests logged yet. Submit tickets from the Live Triage page first.")
     else:
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Total Triaged", stats["total"])
@@ -149,64 +190,84 @@ elif "📊" in page:
         c3.metric("Escalation Rate", f"{stats['escalation_rate']:.0%}")
         c4.metric("Avg Latency", f"{stats['avg_latency_ms']:.0f}ms")
 
-        if stats["category_counts"]:
+        cat_counts = stats.get("category_counts", {})
+        if cat_counts:
             st.subheader("Category Distribution")
             cat_df = pd.DataFrame(
-                list(stats["category_counts"].items()),
+                list(cat_counts.items()),
                 columns=["Category", "Count"]
             ).sort_values("Count", ascending=False)
             st.bar_chart(cat_df.set_index("Category"))
 
 
-# ── Request Log Page ──────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE 3: Request Log
+# ─────────────────────────────────────────────────────────────────────────────
 elif "🔍" in page:
     st.title("🔍 Request Log")
-    st.caption("Last 50 triage requests logged from the API.")
+    st.caption("Last 50 triage requests persisted by the API observability logger.")
 
-    rows = get_recent(50)
+    try:
+        rows = get_recent(50)
+    except Exception as e:
+        st.error(f"Could not load request log: {e}")
+        st.stop()
+
     if not rows:
-        st.info("No requests logged yet.")
+        st.info("📭 No requests logged yet.")
     else:
         df = pd.DataFrame(rows)
         df["auto_escalate"] = df["auto_escalate"].map({1: "YES", 0: "no"})
-        df["sla_risk"] = df["sla_risk"].apply(lambda x: f"{x:.0%}")
-        df["confidence"] = df["confidence"].apply(lambda x: f"{x:.0%}")
-        df["total_ms"] = df["total_ms"].apply(lambda x: f"{x:.0f}ms")
-        st.dataframe(
-            df[["ts", "ticket_id", "category", "priority", "routing_team",
-                "auto_escalate", "sla_risk", "confidence", "total_ms"]],
-            use_container_width=True
-        )
+        df["sla_risk"] = df["sla_risk"].apply(lambda x: f"{float(x):.0%}")
+        df["confidence"] = df["confidence"].apply(lambda x: f"{float(x):.0%}")
+        df["total_ms"] = df["total_ms"].apply(lambda x: f"{float(x):.0f}ms")
+
+        display = [c for c in ["ts", "ticket_id", "category", "priority", "routing_team",
+                                "auto_escalate", "sla_risk", "confidence", "total_ms"] if c in df.columns]
+        st.dataframe(df[display], use_container_width=True, hide_index=True)
 
 
-# ── System Health Page ────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE 4: System Health
+# ─────────────────────────────────────────────────────────────────────────────
 elif "💚" in page:
     st.title("💚 System Health")
 
     try:
-        health = requests.get(f"{API_BASE}/health", timeout=5).json()
-        st.success("✅ API Server: Online")
+        health = requests.get(f"{API_BASE}/health", timeout=5)
+        health.raise_for_status()
+        h = health.json()
 
+        st.success("✅ API Server: Online")
         c1, c2 = st.columns(2)
         with c1:
             st.subheader("Models")
-            st.code(f"Primary LLM : {health['llm_model']}\nFallback LLM: {health['fallback_model']}\nEmbeddings  : {health['embed_model']}", language=None)
+            st.code(
+                f"Primary LLM  : {h.get('llm_model', 'N/A')}\n"
+                f"Fallback LLM : {h.get('fallback_model', 'N/A')}\n"
+                f"Embeddings   : {h.get('embed_model', 'N/A')}",
+                language=None
+            )
         with c2:
             st.subheader("Vector Index")
-            st.metric("Indexed Tickets", f"{health['vector_index_size']:,}")
-            st.caption("ChromaDB with BGE-M3 embeddings (cosine similarity)")
+            st.metric("Indexed Tickets", f"{h.get('vector_index_size', 0):,}")
+            st.caption("ChromaDB + BGE-M3 (cosine similarity, HNSW index)")
 
         st.subheader("Pipeline Architecture")
-        st.code("""
-New Ticket → POST /triage
-    │
-    ├── [1] LLM Cascade Classifier (gemma2:2b → gemma4:e4b fallback)
-    ├── [2] LightGBM SLA Breach Predictor
-    ├── [3] ChromaDB Semantic Search (68,235 vectors, ~4ms)
-    ├── [4] Deterministic Routing Rules + SLA Override
-    └── [5] RAG Response Generator (optional, gemma2:2b)
-        """, language=None)
-
+        st.code(
+            "POST /triage\n"
+            "  │\n"
+            "  ├─ [1] LLM Cascade Classifier (gemma2:2b → gemma4:e4b fallback)\n"
+            "  ├─ [2] LightGBM SLA Breach Predictor\n"
+            "  ├─ [3] ChromaDB Semantic Search (68,235 vectors, ~4ms)\n"
+            "  ├─ [4] Deterministic Routing Rules + SLA Override\n"
+            "  └─ [5] RAG Response Generator (optional, gemma2:2b)\n"
+            "\n"
+            "  SQLite Observability → data/requests.db\n"
+            "  Dashboard            → http://localhost:8501",
+            language=None
+        )
     except Exception:
         st.error("❌ API Server: Offline")
         st.code("uvicorn app.main:app --host 0.0.0.0 --port 8000", language="bash")
+        st.info("Start the API server in a separate terminal, then refresh this page.")
