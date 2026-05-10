@@ -1,62 +1,87 @@
 import requests
 import json
+import sys
 
 GRAFANA_URL = "http://localhost:3000"
-PASSWORDS = ["Cyberarmy@123", "cyberarmy@123", "admin"]
-
-def try_auth():
-    for pwd in PASSWORDS:
-        resp = requests.get(f"{GRAFANA_URL}/api/datasources", auth=("admin", pwd))
-        if resp.status_code == 200:
-            return ("admin", pwd)
-    return None
+AUTH = ("admin", "Cyberarmy@123")
 
 def setup():
-    auth = try_auth()
-    if not auth:
-        print("Failed to authenticate with any password.")
-        return
-        
-    print(f"Authenticated with password: {auth[1]}")
-    
-    # 1. Add Prometheus Data Source
-    ds_payload = {
-        "name": "Prometheus",
-        "type": "prometheus",
-        "url": "http://prometheus:9090",
-        "access": "proxy",
-        "isDefault": True
+    dashboard_json = {
+      "uid": "fastapi_ultimate_1",
+      "title": "FastAPI Observability (Official SupportPulse)",
+      "tags": [ "fastapi", "supportpulse" ],
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 1,
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total API Requests (Last 15m)",
+          "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+          "targets": [{"expr": "sum(increase(http_requests_total[15m]))"}],
+          "options": {"colorMode": "value", "graphMode": "area"}
+        },
+        {
+          "type": "stat",
+          "title": "4xx Client Errors",
+          "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+          "targets": [{"expr": "sum(increase(http_requests_total{status=~\"4..\"}[15m]))"}],
+          "options": {"colorMode": "background", "graphMode": "none"}
+        },
+        {
+          "type": "stat",
+          "title": "5xx Server Errors",
+          "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+          "targets": [{"expr": "sum(increase(http_requests_total{status=~\"5..\"}[15m]))"}],
+          "options": {"colorMode": "background", "graphMode": "none"}
+        },
+        {
+          "type": "stat",
+          "title": "Avg Latency (ms)",
+          "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+          "targets": [{"expr": "(sum(rate(http_request_duration_seconds_sum[15m])) / sum(rate(http_request_duration_seconds_count[15m]))) * 1000"}],
+          "options": {"colorMode": "value", "graphMode": "area"}
+        },
+        {
+          "type": "timeseries",
+          "title": "Requests per Second by Endpoint",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+          "targets": [
+            { "expr": "sum(rate(http_requests_total[1m])) by (handler)", "legendFormat": "{{handler}}" }
+          ],
+          "options": {"tooltip": {"mode": "multi"}}
+        },
+        {
+          "type": "timeseries",
+          "title": "Requests by Status Code",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+          "targets": [
+            { "expr": "sum(rate(http_requests_total[1m])) by (status)", "legendFormat": "HTTP {{status}}" }
+          ],
+          "options": {"tooltip": {"mode": "multi"}}
+        },
+        {
+          "type": "timeseries",
+          "title": "Response Time (Seconds)",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 13 },
+          "targets": [
+            { "expr": "sum(rate(http_request_duration_seconds_sum[1m])) by (handler) / sum(rate(http_request_duration_seconds_count[1m])) by (handler)", "legendFormat": "{{handler}}" }
+          ],
+          "options": {"tooltip": {"mode": "multi"}}
+        }
+      ]
     }
     
-    print("Setting up Prometheus data source...")
-    resp = requests.post(f"{GRAFANA_URL}/api/datasources", json=ds_payload, auth=auth)
-    if resp.status_code in [200, 409]:
-        print("Prometheus data source configured successfully.")
-    else:
-        print(f"Failed to configure data source: {resp.text}")
-        
-    # 2. Download Dashboard 16358
-    print("Downloading FastAPI Dashboard template from Grafana.com...")
-    req = requests.get("https://grafana.com/api/dashboards/16358/revisions/1/download")
-    if req.status_code != 200:
-        print("Failed to download dashboard.")
-        return
-        
-    dashboard_json = req.json()
-    dashboard_json["id"] = None
-    dashboard_json["uid"] = "fastapi-monitoring"
-    
-    # 3. Import Dashboard
-    print("Importing Dashboard into your local Grafana...")
     import_payload = {
         "dashboard": dashboard_json,
-        "overwrite": True,
-        "inputs": [{"name": "DS_PROMETHEUS", "type": "datasource", "pluginId": "prometheus", "value": "Prometheus"}]
+        "overwrite": True
     }
-    dash_resp = requests.post(f"{GRAFANA_URL}/api/dashboards/import", json=import_payload, auth=auth)
+    dash_resp = requests.post(f"{GRAFANA_URL}/api/dashboards/db", json=import_payload, auth=AUTH)
     
     if dash_resp.status_code == 200:
         print("Success! Dashboard is now available in Grafana.")
+        print("URL:", dash_resp.json().get("url"))
     else:
         print(f"Failed to import dashboard: {dash_resp.text}")
 
