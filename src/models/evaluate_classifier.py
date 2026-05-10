@@ -20,7 +20,7 @@ def evaluate(sample_size: int = 500):
     fallback = settings.OLLAMA_FALLBACK_MODEL
 
     print("=" * 60)
-    print(f"  SupportPulse - Cascade Classifier Evaluation")
+    print("  SupportPulse - Cascade Classifier Evaluation")
     print(f"  Primary  : {primary}")
     print(f"  Fallback : {fallback}")
     print(f"  Sample   : {sample_size} tickets")

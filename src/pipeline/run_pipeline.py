@@ -276,9 +276,9 @@ def data_pipeline(skip_ingest: bool = False):
     task_feast()
 
     elapsed = (time.time() - start) / 60
-    logger.info(f"=" * 60)
+    logger.info("=" * 60)
     logger.info(f"Pipeline COMPLETE in {elapsed:.1f} minutes")
-    logger.info(f"=" * 60)
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

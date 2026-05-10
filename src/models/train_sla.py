@@ -92,8 +92,8 @@ def train() -> Path:
     print("=" * 60)
     print("  SupportPulse — SLA Breach Model Training")
     print("=" * 60)
-    print(f"  Model: LightGBM 4.6 (CPU — tabular data, ~60s expected)")
-    print(f"  Note: GPU Ollama inference runs separately in classifier.py")
+    print("  Model: LightGBM 4.6 (CPU — tabular data, ~60s expected)")
+    print("  Note: GPU Ollama inference runs separately in classifier.py")
     print("=" * 60)
 
     print("\n  [SLA] Loading datasets...")
@@ -195,7 +195,7 @@ def train() -> Path:
         print(f"  Val  Recall:    {val_recall:.4f}")
         print(f"  Test AUC:       {test_auc:.4f}")
         print(f"  Test F1:        {test_f1:.4f}")
-        print(f"\n  Top Features by Importance:")
+        print("\n  Top Features by Importance:")
         for feat, imp in fi.head(8).items():
             bar_len = int(imp / fi.max() * 20)
             bar = "#" * bar_len + "-" * (20 - bar_len)

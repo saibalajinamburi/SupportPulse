@@ -38,7 +38,7 @@ def build_index(force_rebuild: bool = False) -> chromadb.Collection:
         count = col.count()
         if count > 0:
             print(f"  [Index] Collection exists with {count:,} vectors. Skipping rebuild.")
-            print(f"  [Index] Pass force_rebuild=True to re-index.")
+            print("  [Index] Pass force_rebuild=True to re-index.")
             return col
     except Exception:
         pass
