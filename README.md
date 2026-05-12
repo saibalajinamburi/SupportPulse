@@ -139,7 +139,9 @@ graph TD
 <details>
 <summary><b>🔀 LLM Cascade — Why two models?</b></summary>
 
-`gemma4:e4b` is powerful but resource-intensive. `gemma2:2b` is fast but struggles with ambiguous edge cases. The Cascade routes every ticket through the primary model first, with the fast model as a verified fallback — enterprise-grade accuracy with smart multi-model failover. No token wasted, no single point of failure.
+`gemma2:2b` serves as the fast primary classifier for most tickets, delivering low-latency inference while fitting fully in VRAM. If the confidence score is low or the response format is invalid, the request is automatically escalated to `gemma4:e4b`, a larger and more capable fallback model designed for ambiguous or high-complexity edge cases.
+
+This cascade architecture reduces average inference latency and GPU memory pressure while preserving high classification reliability on difficult tickets — combining lightweight efficiency with large-model accuracy.
 
 </details>
 
