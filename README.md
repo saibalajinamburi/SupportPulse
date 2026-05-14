@@ -440,10 +440,3 @@ GPU inference is intentionally excluded from CI. Pure Python logic, database I/O
 MIT License — see [LICENSE](./LICENSE)
 
 ---
-
-<div align="center">
-
-Built end-to-end as a portfolio demonstration of production ML Engineering and MLOps.<br/>
-Every design decision is documented with trade-off rationale in [`PROJECT_SUMMARY.md`](./PROJECT_SUMMARY.md).
-
-</div>
